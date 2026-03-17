@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+jinja2
+httpx
+python-multipart
+curl_cffi==0.14.0

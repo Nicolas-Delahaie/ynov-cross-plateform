@@ -3,39 +3,107 @@
   <head>
     <meta charset="utf-8" />
     <title>Admin Dashboard</title>
-
-    <!-- Bootstrap -->
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
-
-    <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
   </head>
   <body class="bg-light">
     <div class="container py-4">
+      <!-- ── Section Interpol ──────────────────────────────────────────────── -->
       <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-          <h3 class="mb-1">Dataset Dashboard</h3>
+          <h3 class="mb-1">
+            <span class="badge bg-danger me-2">Interpol</span>
+            Red Notices
+          </h3>
           <div class="text-muted small">
             Total: {{ stats.total }} · Avec photo: {{ stats.with_photo }} ({{
             stats.pct_with_photo }}%) · Dernier import: {{ stats.last_import or
             "—" }}
           </div>
+          <div class="text-muted small">
+            Dans persons DB : {{ persons_stats.interpol_count }} profils
+            Interpol
+          </div>
         </div>
 
-        <button
-          class="btn btn-warning"
-          hx-post="/admin/import"
-          hx-target="#cardsBlock"
-          hx-swap="innerHTML"
-        >
-          Refresh / Import
-        </button>
+        <div class="d-flex gap-2">
+          <button
+            class="btn btn-outline-danger"
+            hx-post="/admin/clear/interpol"
+            hx-target="#cardsBlock"
+            hx-swap="innerHTML"
+            hx-confirm="Vider toutes les données Interpol (DB + photos) ?"
+          >
+            Vider
+          </button>
+          <button
+            class="btn btn-warning"
+            hx-post="/admin/import"
+            hx-target="#cardsBlock"
+            hx-swap="innerHTML"
+            hx-indicator="#interpol-spinner"
+          >
+            <span
+              id="interpol-spinner"
+              class="htmx-indicator spinner-border spinner-border-sm me-1"
+              role="status"
+            ></span>
+            Import Interpol (100)
+          </button>
+        </div>
       </div>
 
       <div id="cardsBlock">{% include "_cards_grid.html" %}</div>
+
+      <hr class="my-5" />
+
+      <!-- ── Section PRO ───────────────────────────────────────────────────── -->
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h3 class="mb-1">
+            <span class="badge bg-success me-2">PRO</span>
+            Profils Fictifs
+          </h3>
+          <div class="text-muted small">
+            Dans persons DB : {{ persons_stats.pro_count }} profils PRO ·
+            Dernier import: {{ persons_stats.last_pro or "—" }}
+          </div>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button
+            class="btn btn-outline-danger"
+            hx-post="/admin/clear/pro"
+            hx-target="#proCardsBlock"
+            hx-swap="innerHTML"
+            hx-confirm="Vider toutes les données PRO (DB + photos) ?"
+          >
+            Vider
+          </button>
+          <button
+            class="btn btn-success"
+            hx-post="/admin/import/pro"
+            hx-target="#proCardsBlock"
+            hx-swap="innerHTML"
+            hx-indicator="#pro-spinner"
+          >
+            <span
+              id="pro-spinner"
+              class="htmx-indicator spinner-border spinner-border-sm me-1"
+              role="status"
+            ></span>
+            Import PRO (100)
+          </button>
+        </div>
+      </div>
+
+      <div id="proCardsBlock">
+        {% with cards = pro_cards %}{% include "_cards_grid_pro.html" %}{%
+        endwith %}
+      </div>
     </div>
   </body>
 </html>

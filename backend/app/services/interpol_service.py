@@ -2,9 +2,13 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 import asyncio
+import logging
+from pathlib import Path
 from urllib.parse import urlparse
 
 from curl_cffi import requests
+
+logger = logging.getLogger("interpol")
 
 
 class InterpolService:
@@ -18,9 +22,11 @@ class InterpolService:
             url,
             params=params or {},
             headers=self.headers,
-            impersonate="chrome",  # ✅ bypass WAF (TLS/JA3 + HTTP/2 fingerprint)
+            impersonate="chrome",
             timeout=30,
         )
+        if not r.ok:
+            logger.error("Interpol API HTTP %s — url=%s", r.status_code, url)
         r.raise_for_status()
         return r.json()
 
@@ -76,15 +82,41 @@ class InterpolService:
         if not image_url:
             return None  # photo obligatoire => skip
 
+        forename = (details.get("forename") or "").strip() or "Unknown"
+        surname = (details.get("name") or "").strip() or None
+
         return {
             "notice_id": notice_id,
             "notice_type": "red",
+            "forename": forename,
+            "surname": surname,
             "display_name": self._build_display_name(details),
             "nationalities": ",".join(details.get("nationalities", [])) if details.get("nationalities") else None,
             "date_of_birth": details.get("date_of_birth"),
             "image_url": image_url,
             "raw_json": {"details": details, "images": images},
         }
+
+    def _download_image_sync(self, url: str, dest_path: str) -> bool:
+        try:
+            Path(dest_path).parent.mkdir(parents=True, exist_ok=True)
+            r = requests.get(
+                url,
+                impersonate="chrome",
+                timeout=20,
+            )
+            r.raise_for_status()
+            if not r.content:
+                logger.warning("download_image: empty body url=%s", url)
+                return False
+            Path(dest_path).write_bytes(r.content)
+            return True
+        except Exception as e:
+            logger.warning("download_image FAILED url=%s err=%s", url, e)
+            return False
+
+    async def download_image(self, url: str, dest_path: str) -> bool:
+        return await asyncio.to_thread(self._download_image_sync, url, dest_path)
 
     async def close(self) -> None:
         # No-op: on n’a pas de client persistant à fermer avec curl_cffi.requests.get

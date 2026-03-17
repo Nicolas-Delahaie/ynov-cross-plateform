@@ -28,10 +28,30 @@ class CacheService:
                     date_of_birth TEXT,
                     image_url TEXT,
                     raw_json TEXT,
+                    charge TEXT,
                     fetched_at TEXT NOT NULL
                 )
             """)
+            # Migration : ajout colonne charge si table existait déjà sans elle
+            try:
+                conn.execute("ALTER TABLE interpol_notice ADD COLUMN charge TEXT")
+            except Exception:
+                pass  # colonne déjà présente
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS persons (
+                    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                    forename   TEXT NOT NULL,
+                    surname    TEXT,
+                    job        TEXT,
+                    type       TEXT NOT NULL,
+                    photo_path TEXT NOT NULL,
+                    source_id  TEXT UNIQUE,
+                    created_at TEXT NOT NULL
+                )
+            """)
             conn.commit()
+
+    # ── interpol_notice (existant, inchangé) ─────────────────────────────────
 
     def clear_interpol(self, notice_type: str = "red") -> None:
         with self._connect() as conn:
@@ -43,8 +63,8 @@ class CacheService:
             conn.execute("""
                 INSERT INTO interpol_notice (
                     notice_id, notice_type, display_name, nationalities, date_of_birth,
-                    image_url, raw_json, fetched_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    image_url, raw_json, charge, fetched_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(notice_id) DO UPDATE SET
                     notice_type=excluded.notice_type,
                     display_name=excluded.display_name,
@@ -52,6 +72,7 @@ class CacheService:
                     date_of_birth=excluded.date_of_birth,
                     image_url=excluded.image_url,
                     raw_json=excluded.raw_json,
+                    charge=excluded.charge,
                     fetched_at=excluded.fetched_at
             """, (
                 notice["notice_id"],
@@ -61,6 +82,7 @@ class CacheService:
                 notice.get("date_of_birth"),
                 notice.get("image_url"),
                 json.dumps(notice.get("raw_json")) if notice.get("raw_json") else None,
+                notice.get("charge"),
                 datetime.now(timezone.utc).isoformat(),
             ))
             conn.commit()
@@ -81,7 +103,8 @@ class CacheService:
     def list_notices_with_image(self, notice_type: str = "red", limit: int = 120) -> List[Dict[str, Any]]:
         with self._connect() as conn:
             rows = conn.execute("""
-                SELECT notice_id, notice_type, display_name, nationalities, date_of_birth, image_url, fetched_at
+                SELECT notice_id, notice_type, display_name, nationalities, date_of_birth,
+                       image_url, charge, fetched_at
                 FROM interpol_notice
                 WHERE notice_type = ?
                   AND image_url IS NOT NULL AND image_url != ''
@@ -90,3 +113,68 @@ class CacheService:
             """, (notice_type, limit)).fetchall()
 
         return [dict(r) for r in rows]
+
+    # ── persons (nouveau, unifié) ─────────────────────────────────────────────
+
+    def upsert_person(self, person: Dict[str, Any]) -> None:
+        with self._connect() as conn:
+            conn.execute("""
+                INSERT INTO persons (forename, surname, job, type, photo_path, source_id, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(source_id) DO UPDATE SET
+                    forename=excluded.forename,
+                    surname=excluded.surname,
+                    job=excluded.job,
+                    type=excluded.type,
+                    photo_path=excluded.photo_path,
+                    created_at=excluded.created_at
+            """, (
+                person["forename"],
+                person.get("surname"),
+                person.get("job"),
+                person["type"],
+                person["photo_path"],
+                person.get("source_id"),
+                datetime.now(timezone.utc).isoformat(),
+            ))
+            conn.commit()
+
+    def clear_persons(self, person_type: str) -> None:
+        with self._connect() as conn:
+            conn.execute("DELETE FROM persons WHERE type = ?", (person_type,))
+            conn.commit()
+
+    def list_persons(self, person_type: str, limit: int = 120) -> List[Dict[str, Any]]:
+        with self._connect() as conn:
+            rows = conn.execute("""
+                SELECT id, forename, surname, job, type, photo_path, source_id, created_at
+                FROM persons
+                WHERE type = ?
+                ORDER BY created_at DESC
+                LIMIT ?
+            """, (person_type, limit)).fetchall()
+
+        return [dict(r) for r in rows]
+
+    def persons_stats(self) -> Dict[str, Any]:
+        with self._connect() as conn:
+            interpol_count = conn.execute(
+                "SELECT COUNT(*) AS c FROM persons WHERE type = 'interpol'"
+            ).fetchone()["c"]
+            pro_count = conn.execute(
+                "SELECT COUNT(*) AS c FROM persons WHERE type = 'pro'"
+            ).fetchone()["c"]
+            last_interpol = conn.execute(
+                "SELECT MAX(created_at) AS m FROM persons WHERE type = 'interpol'"
+            ).fetchone()["m"]
+            last_pro = conn.execute(
+                "SELECT MAX(created_at) AS m FROM persons WHERE type = 'pro'"
+            ).fetchone()["m"]
+
+        return {
+            "interpol_count": interpol_count,
+            "pro_count": pro_count,
+            "total": interpol_count + pro_count,
+            "last_interpol": last_interpol,
+            "last_pro": last_pro,
+        }

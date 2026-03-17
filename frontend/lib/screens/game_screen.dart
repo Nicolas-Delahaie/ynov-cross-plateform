@@ -107,7 +107,7 @@ class _GameScreenState extends State<GameScreen> {
 
           final int remainingCards =
               session.profiles.length - session.currentIndex;
-          final int numberOfCardsToDisplay = math.min(4, remainingCards);
+          final int numberOfCardsToDisplay = math.min(4, session.profiles.length);
 
           return SafeArea(
             child: Column(

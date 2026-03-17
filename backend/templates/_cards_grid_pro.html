@@ -1,0 +1,48 @@
+{% if error %}
+<div class="alert alert-warning mb-3">
+  <strong>Import PRO impossible.</strong><br />
+  {{ error }}
+</div>
+{% elif imported is defined %}
+<div class="alert alert-success mb-3">
+  Import PRO OK : {{ imported }} profils ajoutés.
+</div>
+{% endif %}
+
+<div class="row g-3">
+  {% for c in cards %}
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card h-100 shadow-sm">
+      <img
+        src="/photos/{{ c.photo_path }}"
+        class="card-img-top"
+        style="object-fit: cover; height: 180px"
+        onerror="this.src = 'https://placehold.co/180x180?text=No+Photo'"
+      />
+
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <h6 class="card-title mb-1">
+            {{ c.forename }}{% if c.surname %} {{ c.surname }}{% endif %}
+          </h6>
+          <span class="badge bg-success">PRO</span>
+        </div>
+
+        <div class="text-muted small">{{ c.job or "—" }}</div>
+      </div>
+
+      <div class="card-footer bg-white">
+        <small class="text-muted"
+          >ID: {{ c.source_id[:8] if c.source_id else "—" }}</small
+        >
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-12">
+    <p class="text-muted">
+      Aucun profil PRO importé. Cliquez sur "Import PRO".
+    </p>
+  </div>
+  {% endfor %}
+</div>

@@ -168,6 +168,11 @@ class _GameScreenState extends State<GameScreen> {
                           numberOfCardsDisplayed: numberOfCardsToDisplay,
                           backCardOffset: const Offset(0, 40),
                           padding: const EdgeInsets.all(24.0),
+                          allowedSwipeDirection:
+                              const AllowedSwipeDirection.symmetric(
+                                horizontal: true,
+                              ),
+                          isLoop: false,
                           onSwipe: (previousIndex, currentIndex, direction) {
                             ProfileType? answer;
                             if (direction == CardSwiperDirection.left) {
@@ -178,9 +183,10 @@ class _GameScreenState extends State<GameScreen> {
 
                             if (answer != null) {
                               _handleSwipe(context, answer);
+                              return true;
                             }
 
-                            return true;
+                            return false;
                           },
                           cardBuilder:
                               (
@@ -193,6 +199,8 @@ class _GameScreenState extends State<GameScreen> {
                                   alignment: .topCenter,
                                   child: ProfileCard(
                                     profile: session.profiles[index],
+                                    horizontalOffsetPercentage:
+                                        percentThresholdX,
                                   ),
                                 );
                               },

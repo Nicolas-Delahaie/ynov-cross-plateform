@@ -199,9 +199,49 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
+  /// Popup de confirmation avant d'abandonner la partie.
+  Future<bool> _confirmQuit() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Quitter la partie ?'),
+        content: const Text(
+          'Ta progression sera perdue et la partie ne sera pas comptée.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: AppConstants.errorColor,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Quitter'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  /// Intercepte le retour (bouton ← ou geste système) en pleine partie.
+  Future<void> _onBackAttempt(bool didPop) async {
+    if (didPop) return;
+    final shouldLeave = await _confirmQuit();
+    if (!mounted || !shouldLeave) return;
+    // Abandon : on vide la session (non comptée) puis on quitte
+    context.read<GameProvider>().endGame();
+    Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) => _onBackAttempt(didPop),
+      child: Scaffold(
       backgroundColor: AppConstants.backgroundColor,
       appBar: AppBar(
         title: const Text('LinkedIn ou Interpol'),
@@ -380,6 +420,7 @@ class _GameScreenState extends State<GameScreen> {
           ),
           if (_showFeedback) _buildFeedbackOverlay(),
         ],
+      ),
       ),
     );
   }

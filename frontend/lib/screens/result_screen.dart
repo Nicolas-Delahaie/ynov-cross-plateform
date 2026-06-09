@@ -4,6 +4,7 @@ import 'package:confetti/confetti.dart';
 import '../providers/game_provider.dart';
 import '../providers/statistics_provider.dart';
 import '../utils/constants.dart';
+import 'game_screen.dart';
 import 'home_screen.dart';
 
 class ResultScreen extends StatefulWidget {
@@ -174,10 +175,13 @@ class _ResultScreenState extends State<ResultScreen> {
                         height: 56,
                         child: ElevatedButton(
                           onPressed: () async {
+                            final navigator = Navigator.of(context);
                             await gameProvider.startNewGame();
-                            if (context.mounted) {
-                              Navigator.pop(context);
-                            }
+                            navigator.pushReplacement(
+                              MaterialPageRoute(
+                                builder: (_) => const GameScreen(),
+                              ),
+                            );
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppConstants.primaryColor,

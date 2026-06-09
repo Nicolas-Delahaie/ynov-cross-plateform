@@ -61,165 +61,195 @@ class _ResultScreenState extends State<ResultScreen> {
                 final isNewBestScore = session.correctAnswers == statistics.bestScore &&
                     statistics.totalGamesPlayed > 1;
 
-                return Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Spacer(),
-                      Text(
-                        'Partie terminée !',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: 40),
-                      // Score card
-                      Container(
-                        padding: const EdgeInsets.all(32),
-                        decoration: BoxDecoration(
-                          color: colorScheme.surface,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
+                return Column(
+                  children: [
+                    // Scrollable content — never overflows regardless of screen size
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
                         child: Column(
                           children: [
-                            Icon(
-                              Icons.emoji_events,
-                              size: 80,
-                              color: session.accuracy >= 0.7 ? Colors.amber : Colors.grey,
-                            ),
-                            const SizedBox(height: 16),
+                            // Title
                             Text(
-                              '${session.correctAnswers}/${session.profiles.length}',
+                              'Partie terminée !',
                               style: TextStyle(
-                                fontSize: 48,
+                                fontSize: 32,
                                 fontWeight: FontWeight.bold,
-                                color: AppConstants.primaryColor,
+                                color: AppConstants.textColor,
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '$accuracy% de réussite',
-                              style: TextStyle(
-                                fontSize: 20,
-                                color: colorScheme.onSurface.withValues(alpha: 0.6),
+                            const SizedBox(height: 24),
+                            // Score
+                            Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.1),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 10),
+                                  ),
+                                ],
                               ),
-                            ),
-                            if (isNewBestScore) ...[
-                              const SizedBox(height: 16),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.amber.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.new_releases, color: Colors.amber[700], size: 20),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Nouveau record !',
-                                      style: TextStyle(
-                                        color: Colors.amber[700],
-                                        fontWeight: FontWeight.bold,
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.emoji_events,
+                                    size: 80,
+                                    color: session.accuracy >= 0.7
+                                        ? Colors.amber
+                                        : Colors.grey,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    '${session.correctAnswers}/${session.profiles.length}',
+                                    style: TextStyle(
+                                      fontSize: 48,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppConstants.primaryColor,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '$accuracy% de réussite',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                  if (isNewBestScore) ...[
+                                    const SizedBox(height: 16),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.amber.withValues(alpha: 0.2),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.new_releases,
+                                            color: Colors.amber[700],
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Nouveau record !',
+                                            style: TextStyle(
+                                              color: Colors.amber[700],
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ],
-                                ),
+                                ],
                               ),
-                            ],
+                            ),
+                            const SizedBox(height: 24),
+                            // Statistics
+                            _StatRow(
+                              label: 'Meilleure série',
+                              value: session.bestStreak.toString(),
+                              icon: Icons.local_fire_department,
+                              color: Colors.orange,
+                            ),
+                            const SizedBox(height: 16),
+                            _StatRow(
+                              label: 'Durée',
+                              value: _formatDuration(session.duration),
+                              icon: Icons.timer,
+                              color: AppConstants.primaryColor,
+                            ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 32),
-                      _StatRow(
-                        label: 'Meilleure série',
-                        value: session.bestStreak.toString(),
-                        icon: Icons.local_fire_department,
-                        color: Colors.orange,
-                      ),
-                      const SizedBox(height: 16),
-                      _StatRow(
-                        label: 'Durée',
-                        value: _formatDuration(session.duration),
-                        icon: Icons.timer,
-                        color: AppConstants.primaryColor,
-                      ),
-                      const Spacer(),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            context.read<SettingsProvider>().vibrateTap();
-                            await gameProvider.startNewGame();
-                            if (context.mounted) {
-                              Navigator.pop(context);
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppConstants.primaryColor,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.replay),
-                              SizedBox(width: 12),
-                              Text(
-                                'Rejouer',
-                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                    ),
+                    // Buttons always visible at bottom
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                      child: Column(
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            height: 56,
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                context.read<SettingsProvider>().vibrateTap();
+                                await gameProvider.startNewGame();
+                                if (context.mounted) {
+                                  Navigator.pop(context);
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppConstants.primaryColor,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: OutlinedButton(
-                          onPressed: () {
-                            context.read<SettingsProvider>().vibrateTap();
-                            gameProvider.endGame();
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(builder: (context) => const HomeScreen()),
-                              (route) => false,
-                            );
-                          },
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: colorScheme.onSurface,
-                            side: BorderSide(color: colorScheme.onSurface, width: 2),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.replay),
+                                  SizedBox(width: 12),
+                                  Text(
+                                    'Rejouer',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          child: const Text(
-                            'Retour au menu',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 56,
+                            child: OutlinedButton(
+                              onPressed: () {
+                                context.read<SettingsProvider>().vibrateTap();
+                                gameProvider.endGame();
+                                Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const HomeScreen(),
+                                  ),
+                                  (route) => false,
+                                );
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppConstants.textColor,
+                                side: BorderSide(
+                                  color: AppConstants.textColor,
+                                  width: 2,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text(
+                                'Retour au menu',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                      const SizedBox(height: 24),
-                    ],
-                  ),
+                    ),
+                  ],
                 );
               },
             ),

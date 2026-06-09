@@ -20,19 +20,20 @@ Application mobile de jeu "swipe" où l'utilisateur devine si une photo de profi
 
 ## ✨ Fonctionnalités
 
-### MVP (Version actuelle)
+### Version actuelle
+- ✅ **Données dynamiques via l'API backend** (`GET /api/persons`) — voir [API Backend](#-api-backend)
 - ✅ Système de swipe gauche/droite ou boutons pour répondre
 - ✅ Score et série (streak) en temps réel
 - ✅ Barre de progression
-- ✅ Vibrations haptiques sur succès/erreur
+- ✅ **Feedback centré après chaque réponse** (bon/faux + révélation du métier/délit)
+- ✅ **Compte à rebours (3·2·1)** avant la carte suivante
+- ✅ **Sons** de réussite / échec + vibrations haptiques
 - ✅ Confettis sur bon score (>70%)
+- ✅ **Confirmation avant de quitter** une partie en cours
 - ✅ Statistiques persistantes (meilleur score, taux de réussite)
-- ✅ 3 niveaux de difficulté (10/20/30 photos)
 - ✅ Paramètres personnalisables (son, vibration)
 
 ### Fonctionnalités futures
-- 🔲 Intégration API backend pour données dynamiques
-- 🔲 Système de sons
 - 🔲 Partage de score sur réseaux sociaux
 - 🔲 Mode timer/challenge
 - 🔲 Leaderboard en ligne
@@ -60,7 +61,9 @@ lib/
 │   ├── profile_repository.dart
 │   └── statistics_repository.dart
 ├── services/            # Services concrets
-│   ├── data_service.dart
+│   ├── data_service.dart            # source locale (assets/data/profiles.json)
+│   ├── api_data_service.dart        # ✅ source backend (GET /api/persons) — utilisée
+│   ├── api_profile_data_service.dart
 │   └── storage_service.dart
 ├── screens/             # UI Screens
 │   ├── home_screen.dart
@@ -169,17 +172,21 @@ dependencies:
   provider: ^6.1.0              # State management
   shared_preferences: ^2.2.0    # Stockage local
   hive: ^2.2.3                  # Base de données locale
-  flutter_card_swiper: ^6.0.0   # Swipe UI
-  vibration: ^1.8.0             # Retour haptique
-  confetti: ^0.7.0              # Animations
-  http: ^1.1.0                  # Requêtes HTTP (API future)
+  flutter_card_swiper: ^7.2.0   # Swipe UI
+  vibration: ^3.1.5             # Retour haptique
+  confetti: ^0.8.0              # Animations
+  audioplayers: ^6.1.0          # Sons réussite/échec
+  share_plus: ^12.0.1           # Partage
+  http: ^1.1.0                  # Requêtes HTTP (API backend)
 ```
 
 ### Assets
 
-Les données de profils sont actuellement stockées dans `assets/data/profiles.json` (35 profils de test).
+- `assets/data/profiles.json` : jeu de profils local (fallback, via `DataService`).
+- `assets/sounds/` : sons du jeu (`success.wav`, `fail.wav`).
 
-**⚠️ Important :** Ces données seront remplacées par l'API backend une fois intégrée.
+**ℹ️ Source de données active :** l'app charge les profils depuis le **backend**
+(`ApiDataService` → `GET /api/persons`). Le JSON local reste un fallback.
 
 ## 🧪 Tests
 
@@ -197,26 +204,36 @@ open coverage/html/index.html
 
 ## 🌐 API Backend
 
-### Intégration prévue
+### ✅ Intégration active
 
-Le projet est prêt pour l'intégration d'une API REST. Voir [API_CONTRACT.md](./API_CONTRACT.md) pour :
-- Format des endpoints
-- Modèles de données
-- Exemples de requêtes/réponses
-- Codes d'erreur
+L'app charge les profils depuis le backend FastAPI via `ApiDataService`
+(branché dans `main.dart`). Endpoint consommé : **`GET /api/persons`**.
 
-### Migration de local vers API
+Réponse mappée vers le modèle `Profile` :
 
-Pour basculer vers l'API :
-1. Créer `ApiDataService implements IDataService`
-2. Remplacer `DataService()` par `ApiDataService()` dans `main.dart`
-3. Aucune modification du reste du code nécessaire (grâce à SOLID)
+| Backend (`/api/persons`) | Front (`Profile`) |
+| ------------------------ | ----------------- |
+| `photo_url`              | `imageUrl`        |
+| `post` (métier/délit)    | `context`         |
+| `type` = `pro`           | `ProfileType.linkedin` |
+| `type` = `interpol`      | `ProfileType.interpol` |
 
-Exemple :
+### Configurer l'URL du backend
+
+Dans `main.dart`, selon l'endroit où tourne le front :
+
 ```dart
-// main.dart
-final IDataService dataService = ApiDataService(baseUrl: 'https://api.example.com');
+final IDataService dataService = ApiDataService(
+  baseUrl: 'http://localhost:8000',   // web / Chrome (même PC)
+  // baseUrl: 'http://10.0.2.2:8000', // émulateur Android
+  // baseUrl: 'http://<IP-du-PC>:8000', // téléphone réel (même WiFi)
+);
 ```
+
+> Le backend doit tourner (`uvicorn main:app --port 8000`) et avoir des données
+> importées via `/admin`. Voir [`backend/README.md`](../backend/README.md).
+> Si le backend est injoignable, `ApiDataService` renvoie une liste vide
+> (l'écran affiche « Aucun profil disponible »).
 
 ## 🤝 Contribution
 
@@ -280,5 +297,5 @@ Pour toute question ou suggestion :
 
 ---
 
-**Version** : 1.0.0-MVP  
-**Dernière mise à jour** : 3 février 2026
+**Version** : 1.0.0  
+**Dernière mise à jour** : 9 juin 2026

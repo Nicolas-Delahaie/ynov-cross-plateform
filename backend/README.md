@@ -49,6 +49,8 @@ Ouvrir dans un navigateur : **http://localhost:8000/admin**
 | **Vider**                 | Supprime toutes les notices de la DB + les photos locales                          |
 
 > L'import efface automatiquement les données existantes avant de relancer.
+> L'import tourne **en tâche de fond** : une **barre de progression** s'affiche en
+> temps réel (polling HTMX) et bascule sur la grille de cartes une fois terminé.
 
 ### Section PRO (profils fictifs)
 
@@ -125,63 +127,50 @@ http://localhost:8000/photos/interpol/2023-21420.jpg
 
 ---
 
-## Intégration Flutter — récupérer les profils
+## API REST pour le jeu — `GET /api/persons` ✅ (implémenté)
 
-Il n'existe pas encore d'endpoint REST public pour la liste des personnes.
-**Deux options :**
+Endpoint qui alimente le jeu Flutter « LinkedIn ou Interpol ». Renvoie un
+**mélange aléatoire** PRO + Interpol, chaque item unifié pour le front.
 
-### Option A — Ajouter un endpoint (recommandé)
+**Paramètres :**
 
-Créer `GET /api/persons?type=pro&limit=100` qui retourne :
+| Param   | Défaut | Description                                              |
+| ------- | ------ | ------------------------------------------------------- |
+| `limit` | 20     | Nombre de profils (max 200)                             |
+| `type`  | _(vide)_ | `pro` (LinkedIn) ou `interpol`. Vide = mix des deux    |
 
-**PRO :**
-
-```json
-{
-  "forename": "Omar",
-  "surname": "Leroy",
-  "job": "Financial Analyst",
-  "charge": null,
-  "type": "pro",
-  "photo_url": "http://<host>:8000/photos/pro/3f2a1b4c.jpg"
-}
-```
-
-**Interpol :**
+**Exemple : `GET http://localhost:8000/api/persons?limit=20`**
 
 ```json
 {
-  "forename": "JOHN",
-  "surname": "DOE",
-  "job": null,
-  "charge": "Criminal act of kidnapping, attempted robbery and murder",
-  "type": "interpol",
-  "photo_url": "http://<host>:8000/photos/interpol/2024-74464.jpg"
+  "count": 20,
+  "persons": [
+    {
+      "id": 12,
+      "type": "interpol",
+      "name": "JOHN DOE",
+      "post": "Criminal act of kidnapping, attempted robbery and murder",
+      "photo_url": "http://localhost:8000/photos/interpol/2024-74464.jpg"
+    },
+    {
+      "id": 13,
+      "type": "pro",
+      "name": "Omar Leroy",
+      "post": "Financial Analyst",
+      "photo_url": "http://localhost:8000/photos/pro/3f2a1b4c.jpg"
+    }
+  ]
 }
 ```
 
-Fichier à créer : `backend/app/api/routes/persons.py`
-Requête SQL (avec jointure pour la charge) :
+- **`type`** : la bonne réponse du jeu (`pro` | `interpol`).
+- **`post`** : champ unifié = métier (PRO) ou délit (Interpol) — le front l'affiche sans distinction.
+- **`photo_url`** : URL absolue construite à partir de l'hôte appelant (marche en web, émulateur, ou téléphone).
 
-```sql
-SELECT
-    p.forename,
-    p.surname,
-    p.job,          -- PRO: métier fictif | Interpol: NULL
-    p.type,
-    p.photo_path,
-    p.source_id,
-    i.charge        -- Interpol: délit | PRO: NULL
-FROM persons p
-LEFT JOIN interpol_notice i ON p.source_id = i.notice_id
-WHERE p.type = ?
-ORDER BY RANDOM()
-LIMIT ?
-```
+> **CORS** est activé (`*`) pour autoriser le front Flutter (web/émulateur/téléphone).
+> Implémentation : `backend/app/api/routes/persons.py` + `CacheService.list_persons_for_game()`.
 
-URL photo à construire côté backend : `f"http://{host}:8000/photos/{row['photo_path']}"`
-
-### Option B — Accès direct SQLite (si même machine)
+### Accès direct SQLite (alternative, si même machine)
 
 ```dart
 // Avec le package sqflite ou sqlite3
@@ -209,10 +198,12 @@ backend/
 └── app/
     ├── api/routes/
     │   ├── admin_dashboard.py     # GET /admin
-    │   └── admin_import.py        # POST /admin/import, /import/pro, /clear/*
+    │   ├── admin_import.py        # POST /admin/import, /import/pro, /clear/*, GET /admin/progress/{kind}
+    │   └── persons.py             # GET /api/persons (API du jeu)
     └── services/
         ├── cache_service.py       # SQLite (lecture/écriture)
         ├── interpol_service.py    # API Interpol + download photos
         ├── pro_service.py         # génération profils + Lexica/randomuser
-        └── import_service.py      # orchestration imports
+        ├── import_service.py      # orchestration imports
+        └── progress.py            # état de progression des imports (barre)
 ```

@@ -20,10 +20,14 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen> {
   final CardSwiperController _controller = CardSwiperController();
 
+  // Durée d'affichage du feedback (secondes) = durée du décompte
+  static const int _feedbackSeconds = 3;
+
   // État du feedback centré affiché après chaque swipe
   bool _showFeedback = false;
   bool _feedbackCorrect = false;
   String _feedbackText = '';
+  int _feedbackCountdown = 0;
   Timer? _feedbackTimer;
 
   @override
@@ -46,10 +50,20 @@ class _GameScreenState extends State<GameScreen> {
       _showFeedback = true;
       _feedbackCorrect = isCorrect;
       _feedbackText = isCorrect ? 'Correct !\n$reveal' : "Raté !\nC'était $reveal";
+      _feedbackCountdown = _feedbackSeconds;
     });
 
-    _feedbackTimer = Timer(const Duration(milliseconds: 1400), () {
-      if (mounted) setState(() => _showFeedback = false);
+    // Décompte 3 -> 2 -> 1 -> disparition (le jeu enchaîne tout seul)
+    _feedbackTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() => _feedbackCountdown--);
+      if (_feedbackCountdown <= 0) {
+        timer.cancel();
+        setState(() => _showFeedback = false);
+      }
     });
   }
 
@@ -103,6 +117,39 @@ class _GameScreenState extends State<GameScreen> {
                         height: 1.3,
                       ),
                     ),
+                    const SizedBox(height: 20),
+                    // Décompte : anneau qui se vide + nombre de secondes
+                    SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          TweenAnimationBuilder<double>(
+                            key: ValueKey(_feedbackText),
+                            tween: Tween(begin: 1.0, end: 0.0),
+                            duration: const Duration(seconds: _feedbackSeconds),
+                            builder: (context, value, _) =>
+                                CircularProgressIndicator(
+                              value: value,
+                              strokeWidth: 4,
+                              backgroundColor: Colors.white24,
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            '$_feedbackCountdown',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -140,9 +187,9 @@ class _GameScreenState extends State<GameScreen> {
 
     // Check if game is finished
     if (gameProvider.currentSession?.isFinished == true) {
-      // On laisse le feedback de la dernière carte s'afficher avant l'écran final
+      // On laisse le décompte de la dernière carte se terminer avant l'écran final
       final navigator = Navigator.of(context);
-      Future.delayed(const Duration(milliseconds: 1400), () {
+      Future.delayed(const Duration(seconds: _feedbackSeconds), () {
         if (mounted) {
           navigator.pushReplacement(
             MaterialPageRoute(builder: (_) => const ResultScreen()),

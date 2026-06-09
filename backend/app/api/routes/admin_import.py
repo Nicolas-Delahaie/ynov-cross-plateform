@@ -47,9 +47,9 @@ async def admin_import_interpol(request: Request):
     cards = cache.list_notices_with_image(notice_type="red", limit=120)
 
     return templates.TemplateResponse(
+        request,
         "_cards_grid.html",
         {
-            "request": request,
             "stats": stats,
             "cards": cards,
             "error": error,
@@ -79,9 +79,9 @@ async def admin_import_pro(request: Request):
     pro_cards = cache.list_persons("pro", limit=120)
 
     return templates.TemplateResponse(
+        request,
         "_cards_grid_pro.html",
         {
-            "request": request,
             "persons_stats": persons_stats,
             "cards": pro_cards,
             "error": error,
@@ -109,9 +109,9 @@ async def admin_clear_pro(request: Request):
 
     persons_stats = cache.persons_stats()
     return templates.TemplateResponse(
+        request,
         "_cards_grid_pro.html",
         {
-            "request": request,
             "persons_stats": persons_stats,
             "cards": [],
             "error": None,
@@ -129,9 +129,9 @@ async def admin_clear_interpol(request: Request):
 
     stats = cache.stats()
     return templates.TemplateResponse(
+        request,
         "_cards_grid.html",
         {
-            "request": request,
             "stats": stats,
             "cards": [],
             "error": None,

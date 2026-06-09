@@ -9,21 +9,31 @@
 
 ## Installation
 
-```bash
+Depuis la racine du projet :
+
+```powershell
 cd backend
-pip install -r requirements.txt
+py -m pip install -r requirements.txt
 ```
+
+> Sur Windows, la commande `py -m ...` est recommandée pour éviter les problèmes de PATH avec `uvicorn`.
 
 ---
 
 ## Lancer le serveur
 
-```bash
+```powershell
 cd backend
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+py -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Le serveur est accessible sur **http://localhost:8000**
+Le serveur est accessible sur **http://127.0.0.1:8000**.
+
+Si votre environnement Python est déjà configuré dans le PATH, vous pouvez aussi utiliser :
+
+```powershell
+uvicorn main:app --reload --host 127.0.0.1 --port 8000
+```
 
 ---
 
@@ -125,20 +135,26 @@ Il n'existe pas encore d'endpoint REST public pour la liste des personnes.
 Créer `GET /api/persons?type=pro&limit=100` qui retourne :
 
 **PRO :**
+
 ```json
 {
-  "forename": "Omar", "surname": "Leroy",
-  "job": "Financial Analyst", "charge": null,
+  "forename": "Omar",
+  "surname": "Leroy",
+  "job": "Financial Analyst",
+  "charge": null,
   "type": "pro",
   "photo_url": "http://<host>:8000/photos/pro/3f2a1b4c.jpg"
 }
 ```
 
 **Interpol :**
+
 ```json
 {
-  "forename": "JOHN", "surname": "DOE",
-  "job": null, "charge": "Criminal act of kidnapping, attempted robbery and murder",
+  "forename": "JOHN",
+  "surname": "DOE",
+  "job": null,
+  "charge": "Criminal act of kidnapping, attempted robbery and murder",
   "type": "interpol",
   "photo_url": "http://<host>:8000/photos/interpol/2024-74464.jpg"
 }

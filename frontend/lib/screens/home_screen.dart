@@ -14,7 +14,6 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppConstants.backgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -36,14 +35,10 @@ class HomeScreen extends StatelessWidget {
                   ),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Column(
+                child: const Column(
                   children: [
-                    Icon(
-                      Icons.swap_horiz,
-                      size: 80,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(height: 16),
+                    Icon(Icons.swap_horiz, size: 80, color: Colors.white),
+                    SizedBox(height: 16),
                     Text(
                       'LinkedIn ou Interpol',
                       style: TextStyle(
@@ -60,6 +55,7 @@ class HomeScreen extends StatelessWidget {
               // Best Score
               Consumer<StatisticsProvider>(
                 builder: (context, statisticsProvider, child) {
+                  final colorScheme = Theme.of(context).colorScheme;
                   final bestScore = statisticsProvider.statistics.bestScore;
                   return Container(
                     padding: const EdgeInsets.symmetric(
@@ -67,11 +63,11 @@ class HomeScreen extends StatelessWidget {
                       vertical: 12,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: colorScheme.surface,
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -80,18 +76,14 @@ class HomeScreen extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.emoji_events,
-                          color: Colors.amber,
-                          size: 24,
-                        ),
+                        const Icon(Icons.emoji_events, color: Colors.amber, size: 24),
                         const SizedBox(width: 8),
                         Text(
                           'Meilleur score: $bestScore',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
-                            color: AppConstants.textColor,
+                            color: colorScheme.onSurface,
                           ),
                         ),
                       ],

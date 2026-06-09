@@ -10,6 +10,7 @@ class SettingsProvider with ChangeNotifier {
   bool _soundEnabled = false;
   bool _vibrationEnabled = true;
   int _difficulty = AppConstants.defaultProfilesPerGame;
+  bool _isDarkMode = false;
   bool _isInitialized = false;
 
   SettingsProvider(this._storageService);
@@ -17,6 +18,7 @@ class SettingsProvider with ChangeNotifier {
   bool get soundEnabled => _soundEnabled;
   bool get vibrationEnabled => _vibrationEnabled;
   int get difficulty => _difficulty;
+  bool get isDarkMode => _isDarkMode;
   bool get isInitialized => _isInitialized;
 
   Future<void> init() async {
@@ -30,6 +32,7 @@ class SettingsProvider with ChangeNotifier {
     _soundEnabled = _storageService.getSoundEnabled();
     _vibrationEnabled = _storageService.getVibrationEnabled();
     _difficulty = _storageService.getDifficulty();
+    _isDarkMode = _storageService.getDarkMode();
   }
 
   Future<void> setSoundEnabled(bool enabled) async {
@@ -47,6 +50,12 @@ class SettingsProvider with ChangeNotifier {
   Future<void> setDifficulty(int profilesPerGame) async {
     _difficulty = profilesPerGame;
     await _storageService.setDifficulty(profilesPerGame);
+    notifyListeners();
+  }
+
+  Future<void> setDarkMode(bool enabled) async {
+    _isDarkMode = enabled;
+    await _storageService.setDarkMode(enabled);
     notifyListeners();
   }
 

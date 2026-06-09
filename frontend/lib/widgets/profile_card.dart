@@ -14,20 +14,18 @@ class ProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final bool isDragging = horizontalOffsetPercentage != 0;
     final bool isDraggingLeft = horizontalOffsetPercentage < 0;
-    final Color directionColor = isDraggingLeft
-        ? AppConstants.secondaryColor
-        : AppConstants.primaryColor;
+    final Color directionColor =
+        isDraggingLeft ? AppConstants.secondaryColor : AppConstants.primaryColor;
     final String labelText = isDraggingLeft ? 'INTERPOL' : 'LINKEDIN';
     final double progress =
         (horizontalOffsetPercentage.abs() / 100).clamp(0.0, 1.0);
 
     return Card(
       elevation: 8,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: Stack(
@@ -39,8 +37,8 @@ class ProfileCard extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.white,
-                    Colors.grey[100]!,
+                    colorScheme.surface,
+                    colorScheme.surfaceContainerLow,
                   ],
                 ),
               ),
@@ -59,7 +57,7 @@ class ProfileCard extends StatelessWidget {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -71,27 +69,24 @@ class ProfileCard extends StatelessWidget {
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
-                            color: Colors.grey[300],
+                            color: colorScheme.surfaceContainerHighest,
                             child: Icon(
                               Icons.person,
                               size: 100,
-                              color: Colors.grey[600],
+                              color: colorScheme.onSurface.withValues(alpha: 0.4),
                             ),
                           );
                         },
                         loadingBuilder: (context, child, loadingProgress) {
                           if (loadingProgress == null) return child;
                           return Container(
-                            color: Colors.grey[300],
+                            color: colorScheme.surfaceContainerHighest,
                             child: Center(
                               child: CircularProgressIndicator(
-                                value:
-                                    loadingProgress.expectedTotalBytes != null
-                                        ? loadingProgress
-                                                .cumulativeBytesLoaded /
-                                            loadingProgress
-                                                .expectedTotalBytes!
-                                        : null,
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
                               ),
                             ),
                           );
@@ -101,17 +96,14 @@ class ProfileCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 40),
                   // Hint
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 16,
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                     child: Text(
                       'Swipe ou choisissez',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w500,
-                        color: Colors.grey[600],
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                       textAlign: TextAlign.center,
                     ),

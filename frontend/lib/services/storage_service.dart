@@ -71,7 +71,17 @@ class StorageService implements IStorageService {
 
   @override
   int getDifficulty() {
-    return _prefs?.getInt(AppConstants.settingsDifficultyKey) ?? 
+    return _prefs?.getInt(AppConstants.settingsDifficultyKey) ??
         AppConstants.defaultProfilesPerGame;
+  }
+
+  @override
+  Future<void> setDarkMode(bool enabled) async {
+    await _prefs?.setBool(AppConstants.settingsDarkModeKey, enabled);
+  }
+
+  @override
+  bool getDarkMode() {
+    return _prefs?.getBool(AppConstants.settingsDarkModeKey) ?? false;
   }
 }

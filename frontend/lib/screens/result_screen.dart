@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:confetti/confetti.dart';
 import '../providers/game_provider.dart';
+import '../providers/settings_provider.dart';
 import '../providers/statistics_provider.dart';
 import '../utils/constants.dart';
 import 'game_screen.dart';
@@ -24,12 +25,16 @@ class _ResultScreenState extends State<ResultScreen> {
       duration: const Duration(seconds: 3),
     );
 
-    // Show confetti if good score
+    // Show confetti and haptic if good score
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final gameProvider = context.read<GameProvider>();
+      final settingsProvider = context.read<SettingsProvider>();
       final session = gameProvider.currentSession;
       if (session != null && session.accuracy >= 0.7) {
         _confettiController.play();
+        settingsProvider.vibrateCelebration();
+      } else {
+        settingsProvider.vibrateIfEnabled(duration: 100);
       }
     });
   }
@@ -176,6 +181,7 @@ class _ResultScreenState extends State<ResultScreen> {
                         child: ElevatedButton(
                           onPressed: () async {
                             final navigator = Navigator.of(context);
+                            context.read<SettingsProvider>().vibrateTap();
                             await gameProvider.startNewGame();
                             navigator.pushReplacement(
                               MaterialPageRoute(
@@ -212,6 +218,7 @@ class _ResultScreenState extends State<ResultScreen> {
                         height: 56,
                         child: OutlinedButton(
                           onPressed: () {
+                            context.read<SettingsProvider>().vibrateTap();
                             gameProvider.endGame();
                             Navigator.pushAndRemoveUntil(
                               context,

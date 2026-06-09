@@ -90,5 +90,13 @@ class SettingsProvider with ChangeNotifier {
   void dispose() {
     _player.dispose();
     super.dispose();
+  Future<void> vibrateTap() async {
+    await vibrateIfEnabled(duration: 30);
+  }
+
+  Future<void> vibrateCelebration() async {
+    await vibrateIfEnabled(duration: 100);
+    await Future.delayed(const Duration(milliseconds: 120));
+    await vibrateIfEnabled(duration: 200);
   }
 }

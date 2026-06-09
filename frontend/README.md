@@ -1,27 +1,13 @@
-# LinkedIn ou Interpol
+# Frontend — LinkedIn ou Interpol
 
-Application mobile de jeu "swipe" où l'utilisateur devine si une photo de profil appartient à un profil LinkedIn professionnel ou à un criminel recherché par Interpol.
+> Projet global → [README racine](../README.md)
 
-![Flutter](https://img.shields.io/badge/Flutter-3.10+-02569B?logo=flutter)
-![Dart](https://img.shields.io/badge/Dart-3.0+-0175C2?logo=dart)
-![License](https://img.shields.io/badge/license-MIT-green)
-
-## 📋 Table des matières
-
-- [Fonctionnalités](#-fonctionnalités)
-- [Architecture](#-architecture)
-- [Prérequis](#-prérequis)
-- [Installation](#-installation)
-- [Structure du projet](#-structure-du-projet)
-- [Principes SOLID](#-principes-solid)
-- [Tests](#-tests)
-- [API Backend](#-api-backend)
-- [Contribution](#-contribution)
-
-## ✨ Fonctionnalités
+## Fonctionnalités
 
 ### Version actuelle
 - ✅ **Données dynamiques via l'API backend** (`GET /api/persons`) — voir [API Backend](#-api-backend)
+### MVP (Version actuelle)
+
 - ✅ Système de swipe gauche/droite ou boutons pour répondre
 - ✅ Score et série (streak) en temps réel
 - ✅ Barre de progression
@@ -34,138 +20,128 @@ Application mobile de jeu "swipe" où l'utilisateur devine si une photo de profi
 - ✅ Paramètres personnalisables (son, vibration)
 
 ### Fonctionnalités futures
+
+- 🔲 Intégration API backend pour données dynamiques
+- 🔲 Système de sons
 - 🔲 Partage de score sur réseaux sociaux
 - 🔲 Mode timer/challenge
 - 🔲 Leaderboard en ligne
 
-## 🏗️ Architecture
+## Architecture
 
 Le projet suit les **principes SOLID** et utilise une architecture en couches :
 
-```
+```text
 lib/
 ├── interfaces/           # Abstractions (Dependency Inversion)
 │   ├── i_data_service.dart
 │   ├── i_storage_service.dart
 │   ├── i_profile_repository.dart
 │   └── i_statistics_repository.dart
-├── models/              # Modèles de données
+├── models/               # Modèles de données
 │   ├── profile.dart
 │   ├── game_session.dart
 │   └── user_statistics.dart
-├── providers/           # State Management (Provider)
+├── providers/            # State Management (Provider)
 │   ├── game_provider.dart
 │   ├── settings_provider.dart
 │   └── statistics_provider.dart
-├── repositories/        # Repository Pattern
+├── repositories/         # Repository Pattern
 │   ├── profile_repository.dart
 │   └── statistics_repository.dart
 ├── services/            # Services concrets
 │   ├── data_service.dart            # source locale (assets/data/profiles.json)
 │   ├── api_data_service.dart        # ✅ source backend (GET /api/persons) — utilisée
 │   ├── api_profile_data_service.dart
+├── services/             # Services concrets
+│   ├── data_service.dart
 │   └── storage_service.dart
-├── screens/             # UI Screens
+├── screens/
 │   ├── home_screen.dart
 │   ├── game_screen.dart
 │   ├── result_screen.dart
 │   ├── statistics_screen.dart
 │   └── settings_screen.dart
-├── widgets/             # Composants réutilisables
+├── widgets/
 │   └── profile_card.dart
-└── utils/               # Constantes et utilitaires
+└── utils/
     └── constants.dart
 ```
 
 ### Patterns utilisés
+
 - **Repository Pattern** : Abstraction de l'accès aux données
 - **Dependency Injection** : Injection des dépendances via constructeurs
 - **Provider Pattern** : Gestion d'état réactive
-- **Singleton Pattern** : Services (DataService, StorageService)
 
-## 🎯 Principes SOLID
+## Principes SOLID
 
 ### S - Single Responsibility Principle ✅
-Chaque classe a une seule responsabilité :
+
 - `GameProvider` : Logique du jeu uniquement
 - `StatisticsProvider` : Gestion des statistiques uniquement
 - `SettingsProvider` : Gestion des paramètres uniquement
 
 ### O - Open/Closed Principle ✅
+
 Les interfaces permettent l'extension sans modification :
-- Facile d'ajouter une nouvelle source de données (API) en implémentant `IDataService`
-- Facile de changer le système de stockage en implémentant `IStorageService`
+
+- Ajouter `ApiDataService implements IDataService` sans toucher au reste
+- Changer le stockage en implémentant `IStorageService`
 
 ### L - Liskov Substitution Principle ✅
-Les implémentations peuvent être substituées sans casser le code :
+
 - `DataService` peut être remplacé par `ApiDataService`
 - `StorageService` peut être remplacé par `SecureStorageService`
 
 ### I - Interface Segregation Principle ✅
-Interfaces spécifiques et ciblées :
-- `IProfileRepository` : Uniquement opérations sur les profils
-- `IStatisticsRepository` : Uniquement opérations sur les stats
+
+- `IProfileRepository` : opérations sur les profils uniquement
+- `IStatisticsRepository` : opérations sur les stats uniquement
 
 ### D - Dependency Inversion Principle ✅
-Les dépendances pointent vers des abstractions :
+
 ```dart
 class GameProvider {
-  final IProfileRepository _profileRepository;  // ✅ Interface
-  final StatisticsProvider _statisticsProvider; // ✅ Abstraction
-  
+  final IProfileRepository _profileRepository;  // Interface
+  final StatisticsProvider _statisticsProvider;
+
   GameProvider(this._profileRepository, this._statisticsProvider);
 }
 ```
 
-## 📦 Prérequis
+## Prérequis
 
-- **Flutter SDK** : 3.10.0 ou supérieur
-- **Dart SDK** : 3.0.0 ou supérieur
-- **Android Studio** / **Xcode** (pour émulateurs)
-- **VS Code** (recommandé) avec extensions Flutter/Dart
+- Flutter SDK 3.10+
+- Dart SDK 3.0+
+- Android Studio / Xcode pour les émulateurs
 
-## 🚀 Installation
+## Installation
 
-### 1. Cloner le repository
-```bash
-git clone https://github.com/Nicolas-Delahaie/ynov-cross-plateform.git
-cd ynov-cross-plateform
-```
+### 1. Installer les dépendances
 
-### 2. Installer les dépendances
 ```bash
 flutter pub get
 ```
 
-### 3. Lancer l'application
+### 2. Lancer l'application
 
-**Sur Android :**
+**Via le terminal :**
+
 ```bash
 flutter run -d android
-```
-
-**Sur iOS :**
-```bash
 flutter run -d ios
-```
-
-**Sur Web :**
-```bash
 flutter run -d chrome
-```
-
-**Sur Windows (nécessite le mode développeur activé) :**
-```bash
-# Activer le mode développeur Windows
-start ms-settings:developers
-
-# Puis lancer
 flutter run -d windows
 ```
 
-## 📁 Structure du projet
+**Via VS Code :**
 
-### Dépendances principales
+Ouvrir le dossier `frontend/` directement (`code frontend/`), puis sélectionner le device dans la barre de statut et lancer avec **F5**.
+
+> ⚠️ Ne pas ouvrir la racine du dépôt — l'extension Flutter ne trouve pas le `pubspec.yaml`.
+
+## Dépendances principales
 
 ```yaml
 dependencies:
@@ -178,9 +154,18 @@ dependencies:
   audioplayers: ^6.1.0          # Sons réussite/échec
   share_plus: ^12.0.1           # Partage
   http: ^1.1.0                  # Requêtes HTTP (API backend)
+  provider: ^6.1.0 # State management
+  shared_preferences: ^2.2.0 # Stockage local
+  hive: ^2.2.3 # Base de données locale
+  hive_flutter: ^1.1.0
+  flutter_card_swiper: ^7.2.0 # Swipe UI
+  vibration: ^3.1.5 # Retour haptique
+  confetti: ^0.8.0 # Animations
+  share_plus: ^12.0.1 # Partage
+  http: ^1.1.0 # Requêtes HTTP
 ```
 
-### Assets
+Les profils de test sont dans `assets/data/profiles.json` — seront remplacés par l'API backend.
 
 - `assets/data/profiles.json` : jeu de profils local (fallback, via `DataService`).
 - `assets/sounds/` : sons du jeu (`success.wav`, `fail.wav`).
@@ -191,15 +176,11 @@ dependencies:
 ## 🧪 Tests
 
 ### Lancer les tests
+## Tests
+
 ```bash
 flutter test
-```
-
-### Coverage
-```bash
 flutter test --coverage
-genhtml coverage/lcov.info -o coverage/html
-open coverage/html/index.html
 ```
 
 ## 🌐 API Backend
@@ -299,3 +280,15 @@ Pour toute question ou suggestion :
 
 **Version** : 1.0.0  
 **Dernière mise à jour** : 9 juin 2026
+## Intégration API backend
+
+Pour basculer vers l'API (voir [backend/README.md](../backend/README.md)) :
+
+1. Créer `ApiDataService implements IDataService`
+2. Remplacer dans `main.dart` :
+
+```dart
+final IDataService dataService = ApiDataService(baseUrl: 'http://localhost:8000');
+```
+
+Aucune autre modification nécessaire grâce à SOLID.

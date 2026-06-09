@@ -75,6 +75,8 @@ class ProfileCard extends StatelessWidget {
                       child: Image.network(
                         profile.imageUrl,
                         fit: BoxFit.cover,
+                        // Biais vers le haut : cadre mieux le visage
+                        alignment: const Alignment(0, -0.3),
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
                             color: Colors.grey[300],

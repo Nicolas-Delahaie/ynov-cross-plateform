@@ -172,11 +172,13 @@ class _GameScreenState extends State<GameScreen> {
 
     final isCorrect = currentProfile.type == answer;
 
-    // Vibration feedback
+    // Feedback son + vibration
     if (isCorrect) {
       settingsProvider.vibrateSuccess();
+      settingsProvider.playSuccess();
     } else {
       settingsProvider.vibrateError();
+      settingsProvider.playError();
     }
 
     // Feedback visuel après chaque swipe (révèle la vraie réponse)

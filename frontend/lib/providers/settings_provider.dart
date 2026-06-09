@@ -66,4 +66,14 @@ class SettingsProvider with ChangeNotifier {
   Future<void> vibrateError() async {
     await vibrateIfEnabled(duration: 200);
   }
+
+  Future<void> vibrateTap() async {
+    await vibrateIfEnabled(duration: 30);
+  }
+
+  Future<void> vibrateCelebration() async {
+    await vibrateIfEnabled(duration: 100);
+    await Future.delayed(const Duration(milliseconds: 120));
+    await vibrateIfEnabled(duration: 200);
+  }
 }

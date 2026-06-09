@@ -145,7 +145,11 @@ class ProService:
                 timeout=20,
             )
             r.raise_for_status()
-            photo_url = r.json()["results"][0]["picture"]["large"]
+            results = (r.json() or {}).get("results") or []
+            if not results:
+                logger.warning("Fallback randomuser réponse vide dest=%s (rate-limit ?)", dest_path)
+                return False
+            photo_url = results[0]["picture"]["large"]
             img = requests.get(photo_url, impersonate="chrome", timeout=20)
             img.raise_for_status()
             if not img.content:

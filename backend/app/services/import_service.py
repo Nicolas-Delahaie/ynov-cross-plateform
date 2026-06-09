@@ -10,6 +10,7 @@ from uuid import uuid4
 from app.services.interpol_service import InterpolService
 from app.services.pro_service import ProService
 from app.services.cache_service import CacheService
+from app.services.progress import Progress
 
 
 logger_interpol = logging.getLogger("import.interpol")
@@ -47,11 +48,18 @@ class ImportService:
         max_pages: int = 1,
         result_per_page: int = 50,
         clear_before: bool = False,
+        progress: Optional[Progress] = None,
     ) -> Tuple[int, Optional[str]]:
         if clear_before:
             self.cache.clear_interpol("red")
             self.cache.clear_persons("interpol")
             self._clear_photo_dir("interpol")
+
+        if progress is not None:
+            progress.update(
+                total=max_pages * result_per_page,
+                phase="Connexion à Interpol…",
+            )
 
         t0 = time.perf_counter()
 
@@ -105,6 +113,14 @@ class ImportService:
                         continue
 
                     processed += 1
+
+                    if progress is not None:
+                        progress.update(
+                            current=processed,
+                            imported=imported,
+                            skipped=skipped_no_image,
+                            phase="Téléchargement des notices Interpol…",
+                        )
 
                     if processed <= 3 or processed % 5 == 0:
                         logger_interpol.info(
@@ -200,10 +216,14 @@ class ImportService:
         *,
         count: int = 100,
         clear_before: bool = False,
+        progress: Optional[Progress] = None,
     ) -> Tuple[int, Optional[str]]:
         if clear_before:
             self.cache.clear_persons("pro")
             self._clear_photo_dir("pro")
+
+        if progress is not None:
+            progress.update(total=count, phase="Recherche des photos (Lexica)…")
 
         t0 = time.perf_counter()
         imported = 0
@@ -220,11 +240,18 @@ class ImportService:
             n_urls, len(self.pro._male_urls), len(self.pro._female_urls), self.pro._use_fallback,
         )
 
+        if progress is not None:
+            source = "randomuser.me" if self.pro._use_fallback else "Lexica"
+            progress.update(phase=f"Téléchargement des photos PRO ({source})…")
+
         try:
             for i in range(count):
                 profile = self.pro.generate_profile()
                 uid = str(uuid4())
                 photo_rel = f"pro/{uid}.jpg"
+
+                if progress is not None:
+                    progress.update(current=i + 1, imported=imported, skipped=skipped)
 
                 try:
                     async with asyncio.timeout(25):
@@ -253,6 +280,9 @@ class ImportService:
                     "source_id": uid,
                 })
                 imported += 1
+
+                if progress is not None:
+                    progress.update(current=i + 1, imported=imported, skipped=skipped)
 
                 now = time.perf_counter()
                 if now - last_heartbeat >= 5:

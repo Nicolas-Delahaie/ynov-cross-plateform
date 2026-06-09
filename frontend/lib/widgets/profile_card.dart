@@ -23,6 +23,11 @@ class ProfileCard extends StatelessWidget {
     final double progress =
         (horizontalOffsetPercentage.abs() / 100).clamp(0.0, 1.0);
 
+    // Size the image at 28% of screen height so it always fits the card area
+    // regardless of what constraints CardSwiper propagates.
+    final double imageSize =
+        (MediaQuery.of(context).size.height * 0.28).clamp(80.0, 250.0);
+
     return Card(
       elevation: 8,
       shape: RoundedRectangleBorder(
@@ -38,19 +43,16 @@ class ProfileCard extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.white,
-                    Colors.grey[100]!,
-                  ],
+                  colors: [Colors.white, Colors.grey[100]!],
                 ),
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Profile Image
+                  // Profile image
                   Container(
-                    width: 250,
-                    height: 250,
+                    width: imageSize,
+                    height: imageSize,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
@@ -59,7 +61,7 @@ class ProfileCard extends StatelessWidget {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -74,7 +76,7 @@ class ProfileCard extends StatelessWidget {
                             color: Colors.grey[300],
                             child: Icon(
                               Icons.person,
-                              size: 100,
+                              size: imageSize * 0.4,
                               color: Colors.grey[600],
                             ),
                           );
@@ -85,13 +87,11 @@ class ProfileCard extends StatelessWidget {
                             color: Colors.grey[300],
                             child: Center(
                               child: CircularProgressIndicator(
-                                value:
-                                    loadingProgress.expectedTotalBytes != null
-                                        ? loadingProgress
-                                                .cumulativeBytesLoaded /
-                                            loadingProgress
-                                                .expectedTotalBytes!
-                                        : null,
+                                value: loadingProgress.expectedTotalBytes !=
+                                        null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
                               ),
                             ),
                           );
@@ -99,22 +99,15 @@ class ProfileCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 40),
-                  // Hint
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 16,
+                  const SizedBox(height: 24),
+                  Text(
+                    'Swipe ou choisissez',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[600],
                     ),
-                    child: Text(
-                      'Swipe ou choisissez',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey[600],
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),

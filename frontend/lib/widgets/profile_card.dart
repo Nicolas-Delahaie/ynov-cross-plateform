@@ -44,7 +44,13 @@ class ProfileCard extends StatelessWidget {
                   ],
                 ),
               ),
-              child: Column(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Column(
+                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // Profile Image
@@ -116,7 +122,10 @@ class ProfileCard extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
                   ),
-                ],
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
             // Color overlay

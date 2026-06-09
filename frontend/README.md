@@ -1,17 +1,11 @@
-## 📋 Table des matières
+# Frontend — LinkedIn ou Interpol
 
-- [Fonctionnalités](#-fonctionnalités)
-- [Architecture](#-architecture)
-- [Prérequis](#-prérequis)
-- [Installation](#-installation)
-- [Structure du projet](#-structure-du-projet)
-- [Principes SOLID](#-principes-solid)
-- [Tests](#-tests)
-- [API Backend](#-api-backend)
+> Projet global → [README racine](../README.md)
 
-## ✨ Fonctionnalités
+## Fonctionnalités
 
 ### MVP (Version actuelle)
+
 - ✅ Système de swipe gauche/droite ou boutons pour répondre
 - ✅ Score et série (streak) en temps réel
 - ✅ Barre de progression
@@ -22,183 +16,156 @@
 - ✅ Paramètres personnalisables (son, vibration)
 
 ### Fonctionnalités futures
+
 - 🔲 Intégration API backend pour données dynamiques
 - 🔲 Système de sons
 - 🔲 Partage de score sur réseaux sociaux
 - 🔲 Mode timer/challenge
 - 🔲 Leaderboard en ligne
 
-## 🏗️ Architecture
+## Architecture
 
 Le projet suit les **principes SOLID** et utilise une architecture en couches :
 
-```
+```text
 lib/
 ├── interfaces/           # Abstractions (Dependency Inversion)
 │   ├── i_data_service.dart
 │   ├── i_storage_service.dart
 │   ├── i_profile_repository.dart
 │   └── i_statistics_repository.dart
-├── models/              # Modèles de données
+├── models/               # Modèles de données
 │   ├── profile.dart
 │   ├── game_session.dart
 │   └── user_statistics.dart
-├── providers/           # State Management (Provider)
+├── providers/            # State Management (Provider)
 │   ├── game_provider.dart
 │   ├── settings_provider.dart
 │   └── statistics_provider.dart
-├── repositories/        # Repository Pattern
+├── repositories/         # Repository Pattern
 │   ├── profile_repository.dart
 │   └── statistics_repository.dart
-├── services/            # Services concrets
+├── services/             # Services concrets
 │   ├── data_service.dart
 │   └── storage_service.dart
-├── screens/             # UI Screens
+├── screens/
 │   ├── home_screen.dart
 │   ├── game_screen.dart
 │   ├── result_screen.dart
 │   ├── statistics_screen.dart
 │   └── settings_screen.dart
-├── widgets/             # Composants réutilisables
+├── widgets/
 │   └── profile_card.dart
-└── utils/               # Constantes et utilitaires
+└── utils/
     └── constants.dart
 ```
 
 ### Patterns utilisés
+
 - **Repository Pattern** : Abstraction de l'accès aux données
 - **Dependency Injection** : Injection des dépendances via constructeurs
 - **Provider Pattern** : Gestion d'état réactive
-- **Singleton Pattern** : Services (DataService, StorageService)
 
-## 🎯 Principes SOLID
+## Principes SOLID
 
 ### S - Single Responsibility Principle ✅
-Chaque classe a une seule responsabilité :
+
 - `GameProvider` : Logique du jeu uniquement
 - `StatisticsProvider` : Gestion des statistiques uniquement
 - `SettingsProvider` : Gestion des paramètres uniquement
 
 ### O - Open/Closed Principle ✅
+
 Les interfaces permettent l'extension sans modification :
-- Facile d'ajouter une nouvelle source de données (API) en implémentant `IDataService`
-- Facile de changer le système de stockage en implémentant `IStorageService`
+
+- Ajouter `ApiDataService implements IDataService` sans toucher au reste
+- Changer le stockage en implémentant `IStorageService`
 
 ### L - Liskov Substitution Principle ✅
-Les implémentations peuvent être substituées sans casser le code :
+
 - `DataService` peut être remplacé par `ApiDataService`
 - `StorageService` peut être remplacé par `SecureStorageService`
 
 ### I - Interface Segregation Principle ✅
-Interfaces spécifiques et ciblées :
-- `IProfileRepository` : Uniquement opérations sur les profils
-- `IStatisticsRepository` : Uniquement opérations sur les stats
+
+- `IProfileRepository` : opérations sur les profils uniquement
+- `IStatisticsRepository` : opérations sur les stats uniquement
 
 ### D - Dependency Inversion Principle ✅
-Les dépendances pointent vers des abstractions :
+
 ```dart
 class GameProvider {
-  final IProfileRepository _profileRepository;  // ✅ Interface
-  final StatisticsProvider _statisticsProvider; // ✅ Abstraction
-  
+  final IProfileRepository _profileRepository;  // Interface
+  final StatisticsProvider _statisticsProvider;
+
   GameProvider(this._profileRepository, this._statisticsProvider);
 }
 ```
 
-## 📦 Prérequis
+## Prérequis
 
-- **Flutter SDK** : 3.10.0 ou supérieur
-- **Dart SDK** : 3.0.0 ou supérieur
-- **Android Studio** / **Xcode** (pour émulateurs)
-- **VS Code** (recommandé) avec extensions Flutter/Dart
+- Flutter SDK 3.10+
+- Dart SDK 3.0+
+- Android Studio / Xcode pour les émulateurs
 
-## 🚀 Installation
+## Installation
 
 ### 1. Installer les dépendances
+
 ```bash
 flutter pub get
 ```
 
 ### 2. Lancer l'application
 
-**Sur Android :**
+**Via le terminal :**
+
 ```bash
 flutter run -d android
-```
-
-**Sur iOS :**
-```bash
 flutter run -d ios
-```
-
-**Sur Web :**
-```bash
 flutter run -d chrome
-```
-
-**Sur Windows (nécessite le mode développeur activé) :**
-```bash
-# Activer le mode développeur Windows
-start ms-settings:developers
-
-# Puis lancer
 flutter run -d windows
 ```
 
-## 📁 Structure du projet
+**Via VS Code :**
 
-### Dépendances principales
+Ouvrir le dossier `frontend/` directement (`code frontend/`), puis sélectionner le device dans la barre de statut et lancer avec **F5**.
+
+> ⚠️ Ne pas ouvrir la racine du dépôt — l'extension Flutter ne trouve pas le `pubspec.yaml`.
+
+## Dépendances principales
 
 ```yaml
 dependencies:
-  provider: ^6.1.0              # State management
-  shared_preferences: ^2.2.0    # Stockage local
-  hive: ^2.2.3                  # Base de données locale
-  flutter_card_swiper: ^6.0.0   # Swipe UI
-  vibration: ^1.8.0             # Retour haptique
-  confetti: ^0.7.0              # Animations
-  http: ^1.1.0                  # Requêtes HTTP (API future)
+  provider: ^6.1.0 # State management
+  shared_preferences: ^2.2.0 # Stockage local
+  hive: ^2.2.3 # Base de données locale
+  hive_flutter: ^1.1.0
+  flutter_card_swiper: ^7.2.0 # Swipe UI
+  vibration: ^3.1.5 # Retour haptique
+  confetti: ^0.8.0 # Animations
+  share_plus: ^12.0.1 # Partage
+  http: ^1.1.0 # Requêtes HTTP
 ```
 
-### Assets
+Les profils de test sont dans `assets/data/profiles.json` — seront remplacés par l'API backend.
 
-Les données de profils sont actuellement stockées dans `assets/data/profiles.json` (35 profils de test).
+## Tests
 
-**⚠️ Important :** Ces données seront remplacées par l'API backend une fois intégrée.
-
-## 🧪 Tests
-
-### Lancer les tests
 ```bash
 flutter test
-```
-
-### Coverage
-```bash
 flutter test --coverage
-genhtml coverage/lcov.info -o coverage/html
-open coverage/html/index.html
 ```
 
-## 🌐 API Backend
+## Intégration API backend
 
-### Intégration prévue
+Pour basculer vers l'API (voir [backend/README.md](../backend/README.md)) :
 
-Le projet est prêt pour l'intégration d'une API REST. Voir [API_CONTRACT.md](./API_CONTRACT.md) pour :
-- Format des endpoints
-- Modèles de données
-- Exemples de requêtes/réponses
-- Codes d'erreur
-
-### Migration de local vers API
-
-Pour basculer vers l'API :
 1. Créer `ApiDataService implements IDataService`
-2. Remplacer `DataService()` par `ApiDataService()` dans `main.dart`
-3. Aucune modification du reste du code nécessaire (grâce à SOLID)
+2. Remplacer dans `main.dart` :
 
-Exemple :
 ```dart
-// main.dart
-final IDataService dataService = ApiDataService(baseUrl: 'https://api.example.com');
+final IDataService dataService = ApiDataService(baseUrl: 'http://localhost:8000');
 ```
+
+Aucune autre modification nécessaire grâce à SOLID.

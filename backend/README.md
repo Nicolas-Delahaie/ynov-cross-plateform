@@ -1,35 +1,29 @@
-# Backend MACEN — Guide d'utilisation
+# Backend — LinkedIn ou Interpol
+
+> Projet global → [README racine](../README.md)
 
 ## Prérequis
 
 - Python 3.11+
 - pip
 
----
-
 ## Installation
 
 ```bash
-cd backend
 pip install -r requirements.txt
 ```
-
----
 
 ## Lancer le serveur
 
 ```bash
-cd backend
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Le serveur est accessible sur **http://localhost:8000**
-
----
+Accessible sur **<http://localhost:8000>**
 
 ## Interface d'administration
 
-Ouvrir dans un navigateur : **http://localhost:8000/admin**
+Ouvrir **<http://localhost:8000/admin>**
 
 ### Section Interpol (notices rouges)
 
@@ -47,115 +41,76 @@ Ouvrir dans un navigateur : **http://localhost:8000/admin**
 | **Import PRO (100)** | Génère 100 profils fictifs avec photo, prénom, nom, métier  |
 | **Vider**            | Supprime tous les profils PRO de la DB + les photos locales |
 
-> Source photos PRO : Lexica.art (visages arabes / moyen-orientaux générés par IA).
-> Si Lexica est indisponible → bascule automatique sur randomuser.me.
+> Source photos PRO : Lexica.art (visages générés par IA). Bascule automatique sur randomuser.me si indisponible.
 > Répartition : 70 % hommes, 30 % femmes (40 ans+).
-
----
 
 ## Structure des données
 
 ### Base de données SQLite — `data/app.db`
 
-#### Table `persons` — profils unifiés (Interpol + PRO)
+#### Table `persons`
 
 ```sql
 CREATE TABLE persons (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    forename   TEXT NOT NULL,       -- prénom
-    surname    TEXT,                -- nom de famille
-    job        TEXT,                -- PRO uniquement : métier fictif (NULL pour Interpol)
-    type       TEXT NOT NULL,       -- "interpol" | "pro"
-    photo_path TEXT NOT NULL,       -- chemin relatif, ex: "pro/uuid.jpg" ou "interpol/2024-1234.jpg"
-    source_id  TEXT UNIQUE,         -- UUID (PRO) ou notice_id Interpol
-    created_at TEXT NOT NULL        -- ISO 8601
+    forename   TEXT NOT NULL,
+    surname    TEXT,
+    job        TEXT,         -- PRO: métier fictif | Interpol: NULL
+    type       TEXT NOT NULL, -- "interpol" | "pro"
+    photo_path TEXT NOT NULL, -- ex: "pro/uuid.jpg" ou "interpol/2024-1234.jpg"
+    source_id  TEXT UNIQUE,
+    created_at TEXT NOT NULL  -- ISO 8601
 )
 ```
 
-#### Table `interpol_notice` — données brutes Interpol
+#### Table `interpol_notice`
 
 ```sql
 CREATE TABLE interpol_notice (
-    notice_id   TEXT PRIMARY KEY,
-    notice_type TEXT NOT NULL,      -- "red"
+    notice_id    TEXT PRIMARY KEY,
+    notice_type  TEXT NOT NULL,  -- "red"
     display_name TEXT,
     nationalities TEXT,
     date_of_birth TEXT,
-    image_url   TEXT,               -- URL source Interpol (photo en ligne)
-    charge      TEXT,               -- ex: "Criminal act of kidnapping, attempted robbery and murder"
-    raw_json    TEXT,               -- JSON complet de l'API Interpol
-    fetched_at  TEXT NOT NULL
+    image_url    TEXT,
+    charge       TEXT,
+    raw_json     TEXT,
+    fetched_at   TEXT NOT NULL
 )
 ```
 
----
-
 ## Accès aux photos
-
-Les photos sont servies statiquement par le backend :
 
 ```
 GET http://localhost:8000/photos/{photo_path}
 ```
-
-Comme:
-
-```
-http://localhost:8000/photos/interpol/2023-21420.jpg
-```
-
-**Exemples :**
 
 | `photo_path` en DB        | URL complète                                           |
 | ------------------------- | ------------------------------------------------------ |
 | `pro/3f2a1b4c-…-uuid.jpg` | `http://localhost:8000/photos/pro/3f2a1b4c-…-uuid.jpg` |
 | `interpol/2024-74464.jpg` | `http://localhost:8000/photos/interpol/2024-74464.jpg` |
 
-> Les fichiers sont stockés localement dans `backend/data/photos/`.
+## Intégration Flutter
 
----
+Endpoint à créer : `GET /api/persons?type=pro&limit=100`
 
-## Intégration Flutter — récupérer les profils
+Réponse attendue :
 
-Il n'existe pas encore d'endpoint REST public pour la liste des personnes.
-**Deux options :**
-
-### Option A — Ajouter un endpoint (recommandé)
-
-Créer `GET /api/persons?type=pro&limit=100` qui retourne :
-
-**PRO :**
 ```json
 {
-  "forename": "Omar", "surname": "Leroy",
-  "job": "Financial Analyst", "charge": null,
+  "forename": "Omar",
+  "surname": "Leroy",
+  "job": "Financial Analyst",
+  "charge": null,
   "type": "pro",
-  "photo_url": "http://<host>:8000/photos/pro/3f2a1b4c.jpg"
+  "photo_url": "http://localhost:8000/photos/pro/3f2a1b4c.jpg"
 }
 ```
 
-**Interpol :**
-```json
-{
-  "forename": "JOHN", "surname": "DOE",
-  "job": null, "charge": "Criminal act of kidnapping, attempted robbery and murder",
-  "type": "interpol",
-  "photo_url": "http://<host>:8000/photos/interpol/2024-74464.jpg"
-}
-```
-
-Fichier à créer : `backend/app/api/routes/persons.py`
-Requête SQL (avec jointure pour la charge) :
+Fichier à créer : `app/api/routes/persons.py`
 
 ```sql
-SELECT
-    p.forename,
-    p.surname,
-    p.job,          -- PRO: métier fictif | Interpol: NULL
-    p.type,
-    p.photo_path,
-    p.source_id,
-    i.charge        -- Interpol: délit | PRO: NULL
+SELECT p.forename, p.surname, p.job, p.type, p.photo_path, i.charge
 FROM persons p
 LEFT JOIN interpol_notice i ON p.source_id = i.notice_id
 WHERE p.type = ?
@@ -163,40 +118,28 @@ ORDER BY RANDOM()
 LIMIT ?
 ```
 
-URL photo à construire côté backend : `f"http://{host}:8000/photos/{row['photo_path']}"`
-
-### Option B — Accès direct SQLite (si même machine)
-
-```dart
-// Avec le package sqflite ou sqlite3
-final db = await openDatabase('path/to/data/app.db');
-final rows = await db.query('persons', where: 'type = ?', whereArgs: ['pro']);
-```
-
----
-
 ## Arborescence
 
-```
+```text
 backend/
-├── main.py                        # entrée FastAPI, mount /photos
+├── main.py
 ├── requirements.txt
 ├── data/
-│   ├── app.db                     # SQLite
+│   ├── app.db
 │   └── photos/
-│       ├── interpol/              # photos avis rouges (.jpg)
-│       └── pro/                   # photos profils fictifs (.jpg)
+│       ├── interpol/
+│       └── pro/
 ├── templates/
 │   ├── dashboard.html
-│   ├── _cards_grid.html           # grille Interpol
-│   └── _cards_grid_pro.html       # grille PRO
+│   ├── _cards_grid.html
+│   └── _cards_grid_pro.html
 └── app/
     ├── api/routes/
-    │   ├── admin_dashboard.py     # GET /admin
-    │   └── admin_import.py        # POST /admin/import, /import/pro, /clear/*
+    │   ├── admin_dashboard.py
+    │   └── admin_import.py
     └── services/
-        ├── cache_service.py       # SQLite (lecture/écriture)
-        ├── interpol_service.py    # API Interpol + download photos
-        ├── pro_service.py         # génération profils + Lexica/randomuser
-        └── import_service.py      # orchestration imports
+        ├── cache_service.py
+        ├── interpol_service.py
+        ├── pro_service.py
+        └── import_service.py
 ```

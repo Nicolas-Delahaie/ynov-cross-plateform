@@ -63,10 +63,11 @@ class _ResultScreenState extends State<ResultScreen> {
 
                 return Padding(
                   padding: const EdgeInsets.all(24.0),
-                  child: Column(
+                  child: SingleChildScrollView(
+                    child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Spacer(),
+                      const SizedBox(height: 24),
                       // Title
                       Text(
                         'Partie terminée !',
@@ -166,7 +167,7 @@ class _ResultScreenState extends State<ResultScreen> {
                         icon: Icons.timer,
                         color: AppConstants.primaryColor,
                       ),
-                      const Spacer(),
+                      const SizedBox(height: 32),
                       // Buttons
                       SizedBox(
                         width: double.infinity,
@@ -237,6 +238,7 @@ class _ResultScreenState extends State<ResultScreen> {
                       ),
                       const SizedBox(height: 24),
                     ],
+                  ),
                   ),
                 );
               },

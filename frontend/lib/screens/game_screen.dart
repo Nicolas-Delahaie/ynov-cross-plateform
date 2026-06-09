@@ -25,6 +25,47 @@ class _GameScreenState extends State<GameScreen> {
     super.dispose();
   }
 
+  void _showResultFeedback(
+    BuildContext context,
+    bool isCorrect,
+    Profile profile,
+  ) {
+    final realLabel =
+        profile.type == ProfileType.linkedin ? 'LinkedIn' : 'Interpol';
+    final post = profile.context;
+    final reveal =
+        (post != null && post.isNotEmpty) ? '$realLabel · $post' : realLabel;
+
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(
+        SnackBar(
+          duration: const Duration(milliseconds: 1300),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor:
+              isCorrect ? AppConstants.successColor : AppConstants.errorColor,
+          content: Row(
+            children: [
+              Icon(
+                isCorrect ? Icons.check_circle : Icons.cancel,
+                color: Colors.white,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  isCorrect ? 'Correct ! $reveal' : "Raté ! C'était $reveal",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+  }
+
   void _handleSwipe(BuildContext context, ProfileType answer) {
     final gameProvider = context.read<GameProvider>();
     final settingsProvider = context.read<SettingsProvider>();
@@ -43,6 +84,9 @@ class _GameScreenState extends State<GameScreen> {
     } else {
       settingsProvider.vibrateError();
     }
+
+    // Feedback visuel après chaque swipe (révèle la vraie réponse)
+    _showResultFeedback(context, isCorrect, currentProfile);
 
     // Update game state
     gameProvider.answerQuestion(answer);

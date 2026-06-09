@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -19,51 +20,96 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen> {
   final CardSwiperController _controller = CardSwiperController();
 
+  // État du feedback centré affiché après chaque swipe
+  bool _showFeedback = false;
+  bool _feedbackCorrect = false;
+  String _feedbackText = '';
+  Timer? _feedbackTimer;
+
   @override
   void dispose() {
+    _feedbackTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
 
-  void _showResultFeedback(
-    BuildContext context,
-    bool isCorrect,
-    Profile profile,
-  ) {
+  void _showResultFeedback(bool isCorrect, Profile profile) {
     final realLabel =
         profile.type == ProfileType.linkedin ? 'LinkedIn' : 'Interpol';
     final post = profile.context;
     final reveal =
         (post != null && post.isNotEmpty) ? '$realLabel · $post' : realLabel;
 
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          duration: const Duration(milliseconds: 1300),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor:
-              isCorrect ? AppConstants.successColor : AppConstants.errorColor,
-          content: Row(
-            children: [
-              Icon(
-                isCorrect ? Icons.check_circle : Icons.cancel,
-                color: Colors.white,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  isCorrect ? 'Correct ! $reveal' : "Raté ! C'était $reveal",
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
+    _feedbackTimer?.cancel();
+    setState(() {
+      _showFeedback = true;
+      _feedbackCorrect = isCorrect;
+      _feedbackText = isCorrect ? 'Correct !\n$reveal' : "Raté !\nC'était $reveal";
+    });
+
+    _feedbackTimer = Timer(const Duration(milliseconds: 1400), () {
+      if (mounted) setState(() => _showFeedback = false);
+    });
+  }
+
+  Widget _buildFeedbackOverlay() {
+    final color = _feedbackCorrect
+        ? AppConstants.successColor
+        : AppConstants.errorColor;
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: Container(
+          color: Colors.black.withValues(alpha: 0.35),
+          child: Center(
+            child: TweenAnimationBuilder<double>(
+              key: ValueKey(_feedbackText),
+              tween: Tween(begin: 0.8, end: 1.0),
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutBack,
+              builder: (context, scale, child) =>
+                  Transform.scale(scale: scale, child: child),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 40),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 28),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _feedbackCorrect ? Icons.check_circle : Icons.cancel,
+                      color: Colors.white,
+                      size: 64,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      _feedbackText,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
-      );
+      ),
+    );
   }
 
   void _handleSwipe(BuildContext context, ProfileType answer) {
@@ -86,7 +132,7 @@ class _GameScreenState extends State<GameScreen> {
     }
 
     // Feedback visuel après chaque swipe (révèle la vraie réponse)
-    _showResultFeedback(context, isCorrect, currentProfile);
+    _showResultFeedback(isCorrect, currentProfile);
 
     // Update game state
     gameProvider.answerQuestion(answer);
@@ -114,7 +160,9 @@ class _GameScreenState extends State<GameScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      body: Consumer<GameProvider>(
+      body: Stack(
+        children: [
+          Consumer<GameProvider>(
         builder: (context, gameProvider, child) {
           final session = gameProvider.currentSession;
 
@@ -285,6 +333,9 @@ class _GameScreenState extends State<GameScreen> {
             ),
           );
         },
+          ),
+          if (_showFeedback) _buildFeedbackOverlay(),
+        ],
       ),
     );
   }

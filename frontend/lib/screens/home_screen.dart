@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/game_provider.dart';
+import '../providers/settings_provider.dart';
 import '../providers/statistics_provider.dart';
 import '../utils/constants.dart';
 import 'game_screen.dart';
@@ -183,7 +184,12 @@ class _MenuButton extends StatelessWidget {
       width: double.infinity,
       height: 56,
       child: ElevatedButton(
-        onPressed: isLoading ? null : onPressed,
+        onPressed: isLoading
+            ? null
+            : () {
+                context.read<SettingsProvider>().vibrateTap();
+                onPressed();
+              },
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           foregroundColor: Colors.white,

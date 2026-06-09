@@ -42,8 +42,9 @@ class SettingsScreen extends StatelessWidget {
                 icon: Icons.vibration,
                 child: Switch(
                   value: settingsProvider.vibrationEnabled,
-                  onChanged: (value) {
-                    settingsProvider.setVibrationEnabled(value);
+                  onChanged: (value) async {
+                    await settingsProvider.setVibrationEnabled(value);
+                    if (value) settingsProvider.vibrateTap();
                   },
                   activeColor: AppConstants.primaryColor,
                 ),
@@ -203,7 +204,10 @@ class _DifficultyOption extends StatelessWidget {
     final bool isSelected = value == groupValue;
 
     return GestureDetector(
-      onTap: () => onChanged(value),
+      onTap: () {
+        context.read<SettingsProvider>().vibrateTap();
+        onChanged(value);
+      },
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(

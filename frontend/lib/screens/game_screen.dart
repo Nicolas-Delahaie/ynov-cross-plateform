@@ -36,7 +36,8 @@ class _GameScreenState extends State<GameScreen> {
   void _showResultFeedback(bool isCorrect, Profile profile) {
     final realLabel =
         profile.type == ProfileType.linkedin ? 'LinkedIn' : 'Interpol';
-    final post = profile.context;
+    // Nettoie le texte (les délits Interpol ont des retours à la ligne en vrac)
+    final post = profile.context?.replaceAll(RegExp(r'\s+'), ' ').trim();
     final reveal =
         (post != null && post.isNotEmpty) ? '$realLabel · $post' : realLabel;
 
@@ -139,11 +140,12 @@ class _GameScreenState extends State<GameScreen> {
 
     // Check if game is finished
     if (gameProvider.currentSession?.isFinished == true) {
-      Future.delayed(const Duration(milliseconds: 500), () {
+      // On laisse le feedback de la dernière carte s'afficher avant l'écran final
+      final navigator = Navigator.of(context);
+      Future.delayed(const Duration(milliseconds: 1400), () {
         if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const ResultScreen()),
+          navigator.pushReplacement(
+            MaterialPageRoute(builder: (_) => const ResultScreen()),
           );
         }
       });
@@ -199,7 +201,8 @@ class _GameScreenState extends State<GameScreen> {
 
           final int remainingCards =
               session.profiles.length - session.currentIndex;
-          final int numberOfCardsToDisplay = math.min(4, session.profiles.length);
+          final int numberOfCardsToDisplay =
+              math.min(2, session.profiles.length);
 
           return SafeArea(
             child: Column(
@@ -287,13 +290,9 @@ class _GameScreenState extends State<GameScreen> {
                                 percentThresholdX,
                                 percentThresholdY,
                               ) {
-                                return Align(
-                                  alignment: .topCenter,
-                                  child: ProfileCard(
-                                    profile: session.profiles[index],
-                                    horizontalOffsetPercentage:
-                                        percentThresholdX,
-                                  ),
+                                return ProfileCard(
+                                  profile: session.profiles[index],
+                                  horizontalOffsetPercentage: percentThresholdX,
                                 );
                               },
                         ),
@@ -308,10 +307,9 @@ class _GameScreenState extends State<GameScreen> {
                           label: 'Interpol',
                           color: AppConstants.secondaryColor,
                           icon: Icons.warning,
-                          onPressed: () {
-                            _handleSwipe(context, ProfileType.interpol);
-                            _controller.swipe(.left);
-                          },
+                          // Déclenche juste l'animation -> onSwipe fait le reste
+                          onPressed: () =>
+                              _controller.swipe(CardSwiperDirection.left),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -320,10 +318,9 @@ class _GameScreenState extends State<GameScreen> {
                           label: 'LinkedIn',
                           color: AppConstants.primaryColor,
                           icon: Icons.business_center,
-                          onPressed: () {
-                            _handleSwipe(context, ProfileType.linkedin);
-                            _controller.swipe(.right);
-                          },
+                          // Déclenche juste l'animation -> onSwipe fait le reste
+                          onPressed: () =>
+                              _controller.swipe(CardSwiperDirection.right),
                         ),
                       ),
                     ],

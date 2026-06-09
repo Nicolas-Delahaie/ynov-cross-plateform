@@ -27,6 +27,7 @@ class AppConstants {
   static const String settingsSoundKey = 'settings_sound';
   static const String settingsVibrationKey = 'settings_vibration';
   static const String settingsDifficultyKey = 'settings_difficulty';
+  static const String settingsDarkModeKey = 'settings_dark_mode';
   
   // Asset paths
   static const String profilesDataPath = 'assets/data/profiles.json';

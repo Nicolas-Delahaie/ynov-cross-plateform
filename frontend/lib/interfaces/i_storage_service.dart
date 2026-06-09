@@ -61,4 +61,12 @@ abstract class IStorageService {
   ///
   /// Retourne la valeur par défaut si la valeur n'a jamais été définie.
   int getDifficulty();
+
+  /// Sauvegarde l'état du mode sombre.
+  Future<void> setDarkMode(bool enabled);
+
+  /// Récupère l'état du mode sombre.
+  ///
+  /// Retourne `false` par défaut si la valeur n'a jamais été définie.
+  bool getDarkMode();
 }

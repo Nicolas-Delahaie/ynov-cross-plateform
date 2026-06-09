@@ -20,11 +20,8 @@ class _ResultScreenState extends State<ResultScreen> {
   @override
   void initState() {
     super.initState();
-    _confettiController = ConfettiController(
-      duration: const Duration(seconds: 3),
-    );
+    _confettiController = ConfettiController(duration: const Duration(seconds: 3));
 
-    // Show confetti and haptic if good score
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final gameProvider = context.read<GameProvider>();
       final settingsProvider = context.read<SettingsProvider>();
@@ -47,7 +44,6 @@ class _ResultScreenState extends State<ResultScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppConstants.backgroundColor,
       body: Stack(
         children: [
           SafeArea(
@@ -55,11 +51,10 @@ class _ResultScreenState extends State<ResultScreen> {
               builder: (context, gameProvider, statisticsProvider, child) {
                 final session = gameProvider.currentSession;
                 final statistics = statisticsProvider.statistics;
+                final colorScheme = Theme.of(context).colorScheme;
 
                 if (session == null) {
-                  return const Center(
-                    child: Text('Aucune session'),
-                  );
+                  return const Center(child: Text('Aucune session'));
                 }
 
                 final accuracy = (session.accuracy * 100).toStringAsFixed(1);
@@ -72,25 +67,24 @@ class _ResultScreenState extends State<ResultScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Spacer(),
-                      // Title
                       Text(
                         'Partie terminée !',
                         style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
-                          color: AppConstants.textColor,
+                          color: colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 40),
-                      // Score
+                      // Score card
                       Container(
                         padding: const EdgeInsets.all(32),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: colorScheme.surface,
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
+                              color: Colors.black.withValues(alpha: 0.1),
                               blurRadius: 20,
                               offset: const Offset(0, 10),
                             ),
@@ -101,9 +95,7 @@ class _ResultScreenState extends State<ResultScreen> {
                             Icon(
                               Icons.emoji_events,
                               size: 80,
-                              color: session.accuracy >= 0.7
-                                  ? Colors.amber
-                                  : Colors.grey,
+                              color: session.accuracy >= 0.7 ? Colors.amber : Colors.grey,
                             ),
                             const SizedBox(height: 16),
                             Text(
@@ -119,7 +111,7 @@ class _ResultScreenState extends State<ResultScreen> {
                               '$accuracy% de réussite',
                               style: TextStyle(
                                 fontSize: 20,
-                                color: Colors.grey[600],
+                                color: colorScheme.onSurface.withValues(alpha: 0.6),
                               ),
                             ),
                             if (isNewBestScore) ...[
@@ -130,17 +122,13 @@ class _ResultScreenState extends State<ResultScreen> {
                                   vertical: 8,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.amber.withOpacity(0.2),
+                                  color: Colors.amber.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(
-                                      Icons.new_releases,
-                                      color: Colors.amber[700],
-                                      size: 20,
-                                    ),
+                                    Icon(Icons.new_releases, color: Colors.amber[700], size: 20),
                                     const SizedBox(width: 8),
                                     Text(
                                       'Nouveau record !',
@@ -157,7 +145,6 @@ class _ResultScreenState extends State<ResultScreen> {
                         ),
                       ),
                       const SizedBox(height: 32),
-                      // Statistics
                       _StatRow(
                         label: 'Meilleure série',
                         value: session.bestStreak.toString(),
@@ -172,7 +159,6 @@ class _ResultScreenState extends State<ResultScreen> {
                         color: AppConstants.primaryColor,
                       ),
                       const Spacer(),
-                      // Buttons
                       SizedBox(
                         width: double.infinity,
                         height: 56,
@@ -191,17 +177,14 @@ class _ResultScreenState extends State<ResultScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: Row(
+                          child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
+                            children: [
                               Icon(Icons.replay),
                               SizedBox(width: 12),
                               Text(
                                 'Rejouer',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                               ),
                             ],
                           ),
@@ -217,28 +200,20 @@ class _ResultScreenState extends State<ResultScreen> {
                             gameProvider.endGame();
                             Navigator.pushAndRemoveUntil(
                               context,
-                              MaterialPageRoute(
-                                builder: (context) => const HomeScreen(),
-                              ),
+                              MaterialPageRoute(builder: (context) => const HomeScreen()),
                               (route) => false,
                             );
                           },
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: AppConstants.textColor,
-                            side: BorderSide(
-                              color: AppConstants.textColor,
-                              width: 2,
-                            ),
+                            foregroundColor: colorScheme.onSurface,
+                            side: BorderSide(color: colorScheme.onSurface, width: 2),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                           child: const Text(
                             'Retour au menu',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                           ),
                         ),
                       ),
@@ -289,14 +264,16 @@ class _StatRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -307,7 +284,7 @@ class _StatRow extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 24),
@@ -318,7 +295,7 @@ class _StatRow extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey[600],
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
           ),
@@ -327,7 +304,7 @@ class _StatRow extends StatelessWidget {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: AppConstants.textColor,
+              color: colorScheme.onSurface,
             ),
           ),
         ],

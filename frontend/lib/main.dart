@@ -12,7 +12,7 @@ import 'providers/game_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/statistics_provider.dart';
 import 'screens/home_screen.dart';
-import 'utils/constants.dart';
+import 'utils/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -66,17 +66,16 @@ class MyApp extends StatelessWidget {
           create: (_) => SettingsProvider(storageService)..init(),
         ),
       ],
-      child: MaterialApp(
-        title: 'LinkedIn ou Interpol',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: AppConstants.primaryColor,
-          ),
-          useMaterial3: true,
-          scaffoldBackgroundColor: AppConstants.backgroundColor,
+      child: Consumer<SettingsProvider>(
+        builder: (context, settings, child) => MaterialApp(
+          title: 'LinkedIn ou Interpol',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          home: child,
         ),
-        home: const HomeScreen(),
+        child: const HomeScreen(),
       ),
     );
   }

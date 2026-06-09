@@ -9,7 +9,6 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppConstants.backgroundColor,
       appBar: AppBar(
         title: const Text('Paramètres'),
         backgroundColor: AppConstants.primaryColor,
@@ -21,21 +20,28 @@ class SettingsScreen extends StatelessWidget {
           return ListView(
             padding: const EdgeInsets.all(24),
             children: [
-              // Sound settings
+              _SettingCard(
+                title: 'Mode sombre',
+                subtitle: 'Thème sombre pour l\'interface',
+                icon: Icons.dark_mode,
+                child: Switch(
+                  value: settingsProvider.isDarkMode,
+                  onChanged: settingsProvider.setDarkMode,
+                  activeThumbColor: AppConstants.primaryColor,
+                ),
+              ),
+              const SizedBox(height: 16),
               _SettingCard(
                 title: 'Sons',
                 subtitle: 'Activer les effets sonores',
                 icon: Icons.volume_up,
                 child: Switch(
                   value: settingsProvider.soundEnabled,
-                  onChanged: (value) {
-                    settingsProvider.setSoundEnabled(value);
-                  },
-                  activeColor: AppConstants.primaryColor,
+                  onChanged: settingsProvider.setSoundEnabled,
+                  activeThumbColor: AppConstants.primaryColor,
                 ),
               ),
               const SizedBox(height: 16),
-              // Vibration settings
               _SettingCard(
                 title: 'Vibrations',
                 subtitle: 'Retour haptique lors des réponses',
@@ -46,17 +52,16 @@ class SettingsScreen extends StatelessWidget {
                     await settingsProvider.setVibrationEnabled(value);
                     if (value) settingsProvider.vibrateTap();
                   },
-                  activeColor: AppConstants.primaryColor,
+                  activeThumbColor: AppConstants.primaryColor,
                 ),
               ),
               const SizedBox(height: 32),
-              // Difficulty settings
               Text(
                 'Difficulté',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: AppConstants.textColor,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 16),
@@ -66,9 +71,7 @@ class SettingsScreen extends StatelessWidget {
                 value: AppConstants.easyProfilesPerGame,
                 groupValue: settingsProvider.difficulty,
                 onChanged: (value) {
-                  if (value != null) {
-                    settingsProvider.setDifficulty(value);
-                  }
+                  if (value != null) settingsProvider.setDifficulty(value);
                 },
               ),
               const SizedBox(height: 12),
@@ -78,9 +81,7 @@ class SettingsScreen extends StatelessWidget {
                 value: AppConstants.defaultProfilesPerGame,
                 groupValue: settingsProvider.difficulty,
                 onChanged: (value) {
-                  if (value != null) {
-                    settingsProvider.setDifficulty(value);
-                  }
+                  if (value != null) settingsProvider.setDifficulty(value);
                 },
               ),
               const SizedBox(height: 12),
@@ -90,13 +91,10 @@ class SettingsScreen extends StatelessWidget {
                 value: AppConstants.hardProfilesPerGame,
                 groupValue: settingsProvider.difficulty,
                 onChanged: (value) {
-                  if (value != null) {
-                    settingsProvider.setDifficulty(value);
-                  }
+                  if (value != null) settingsProvider.setDifficulty(value);
                 },
               ),
               const SizedBox(height: 32),
-              // About section
               _SettingCard(
                 title: 'À propos',
                 subtitle: 'LinkedIn ou Interpol v1.0.0',
@@ -126,14 +124,16 @@ class _SettingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -144,7 +144,7 @@ class _SettingCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppConstants.primaryColor.withOpacity(0.1),
+              color: AppConstants.primaryColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -163,7 +163,7 @@ class _SettingCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: AppConstants.textColor,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -171,7 +171,7 @@ class _SettingCard extends StatelessWidget {
                   subtitle,
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.grey[600],
+                    color: colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
               ],
@@ -202,6 +202,7 @@ class _DifficultyOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isSelected = value == groupValue;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return GestureDetector(
       onTap: () {
@@ -211,18 +212,16 @@ class _DifficultyOption extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected
-                ? AppConstants.primaryColor
-                : Colors.grey[300]!,
+            color: isSelected ? AppConstants.primaryColor : colorScheme.outline,
             width: 2,
           ),
           boxShadow: [
             if (isSelected)
               BoxShadow(
-                color: AppConstants.primaryColor.withOpacity(0.1),
+                color: AppConstants.primaryColor.withValues(alpha: 0.1),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
@@ -246,7 +245,7 @@ class _DifficultyOption extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: AppConstants.textColor,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -254,7 +253,7 @@ class _DifficultyOption extends StatelessWidget {
                     description,
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey[600],
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                 ],

@@ -12,6 +12,7 @@ class SettingsProvider with ChangeNotifier {
   bool _soundEnabled = true;
   bool _vibrationEnabled = true;
   int _difficulty = AppConstants.defaultProfilesPerGame;
+  bool _isDarkMode = false;
   bool _isInitialized = false;
 
   SettingsProvider(this._storageService);
@@ -19,6 +20,7 @@ class SettingsProvider with ChangeNotifier {
   bool get soundEnabled => _soundEnabled;
   bool get vibrationEnabled => _vibrationEnabled;
   int get difficulty => _difficulty;
+  bool get isDarkMode => _isDarkMode;
   bool get isInitialized => _isInitialized;
 
   Future<void> init() async {
@@ -32,6 +34,7 @@ class SettingsProvider with ChangeNotifier {
     _soundEnabled = _storageService.getSoundEnabled();
     _vibrationEnabled = _storageService.getVibrationEnabled();
     _difficulty = _storageService.getDifficulty();
+    _isDarkMode = _storageService.getDarkMode();
   }
 
   Future<void> setSoundEnabled(bool enabled) async {
@@ -52,6 +55,12 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setDarkMode(bool enabled) async {
+    _isDarkMode = enabled;
+    await _storageService.setDarkMode(enabled);
+    notifyListeners();
+  }
+
   Future<void> vibrateIfEnabled({int duration = 100}) async {
     if (!_vibrationEnabled) return;
 
@@ -66,6 +75,16 @@ class SettingsProvider with ChangeNotifier {
   }
 
   Future<void> vibrateError() async {
+    await vibrateIfEnabled(duration: 200);
+  }
+
+  Future<void> vibrateTap() async {
+    await vibrateIfEnabled(duration: 30);
+  }
+
+  Future<void> vibrateCelebration() async {
+    await vibrateIfEnabled(duration: 100);
+    await Future.delayed(const Duration(milliseconds: 120));
     await vibrateIfEnabled(duration: 200);
   }
 
@@ -90,13 +109,5 @@ class SettingsProvider with ChangeNotifier {
   void dispose() {
     _player.dispose();
     super.dispose();
-  Future<void> vibrateTap() async {
-    await vibrateIfEnabled(duration: 30);
-  }
-
-  Future<void> vibrateCelebration() async {
-    await vibrateIfEnabled(duration: 100);
-    await Future.delayed(const Duration(milliseconds: 120));
-    await vibrateIfEnabled(duration: 200);
   }
 }

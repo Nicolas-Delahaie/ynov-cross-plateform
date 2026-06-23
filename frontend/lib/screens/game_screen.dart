@@ -187,7 +187,6 @@ class _GameScreenState extends State<GameScreen> {
     // Update game state
     gameProvider.answerQuestion(answer);
 
-    // Check if game is finished
     if (gameProvider.currentSession?.isFinished == true) {
       // On laisse le décompte de la dernière carte se terminer avant l'écran final
       final navigator = Navigator.of(context);
@@ -256,27 +255,27 @@ class _GameScreenState extends State<GameScreen> {
           Consumer<GameProvider>(
         builder: (context, gameProvider, child) {
           final session = gameProvider.currentSession;
+          final colorScheme = Theme.of(context).colorScheme;
 
           if (session == null) {
             return const Center(child: Text('Aucune session active'));
           }
 
-          // Check if profiles are available
           if (session.profiles.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
+                  Icon(Icons.error_outline, size: 64, color: colorScheme.onSurface.withValues(alpha: 0.3)),
                   const SizedBox(height: 16),
                   Text(
                     'Aucun profil disponible',
-                    style: TextStyle(fontSize: 20, color: Colors.grey[600]),
+                    style: TextStyle(fontSize: 20, color: colorScheme.onSurface.withValues(alpha: 0.6)),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Impossible de charger les données',
-                    style: TextStyle(fontSize: 16, color: Colors.grey[500]),
+                    style: TextStyle(fontSize: 16, color: colorScheme.onSurface.withValues(alpha: 0.5)),
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(
@@ -299,7 +298,7 @@ class _GameScreenState extends State<GameScreen> {
                 // Header with score and progress
                 Container(
                   padding: const EdgeInsets.all(16),
-                  color: Colors.white,
+                  color: colorScheme.surface,
                   child: Column(
                     children: [
                       Row(
@@ -319,23 +318,19 @@ class _GameScreenState extends State<GameScreen> {
                           ),
                           _ScoreItem(
                             label: 'Restant',
-                            value:
-                                '${session.profiles.length - session.currentIndex}',
+                            value: '${session.profiles.length - session.currentIndex}',
                             icon: Icons.collections,
                             color: AppConstants.primaryColor,
                           ),
                         ],
                       ),
                       const SizedBox(height: 12),
-                      // Progress bar
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: LinearProgressIndicator(
                           value: session.currentIndex / session.profiles.length,
-                          backgroundColor: Colors.grey[200],
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            AppConstants.primaryColor,
-                          ),
+                          backgroundColor: colorScheme.surfaceContainerHighest,
+                          valueColor: AlwaysStoppedAnimation<Color>(AppConstants.primaryColor),
                           minHeight: 8,
                         ),
                       ),
@@ -353,9 +348,7 @@ class _GameScreenState extends State<GameScreen> {
                           backCardOffset: const Offset(0, 40),
                           padding: const EdgeInsets.all(24.0),
                           allowedSwipeDirection:
-                              const AllowedSwipeDirection.symmetric(
-                                horizontal: true,
-                              ),
+                              const AllowedSwipeDirection.symmetric(horizontal: true),
                           isLoop: false,
                           onSwipe: (previousIndex, currentIndex, direction) {
                             ProfileType? answer;
@@ -443,6 +436,8 @@ class _ScoreItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Column(
       children: [
         Icon(icon, color: color, size: 24),
@@ -452,10 +447,16 @@ class _ScoreItem extends StatelessWidget {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: AppConstants.textColor,
+            color: colorScheme.onSurface,
           ),
         ),
-        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: colorScheme.onSurface.withValues(alpha: 0.6),
+          ),
+        ),
       ],
     );
   }

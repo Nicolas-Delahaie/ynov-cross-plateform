@@ -9,16 +9,13 @@
 
 ## Installation
 
-Depuis la racine du projet :
-
 ```powershell
 cd backend
 py -m pip install -r requirements.txt
 ```
 
 > Sur Windows, la commande `py -m ...` est recommandée pour éviter les problèmes de PATH avec `uvicorn`.
-
----
+> Sur macOS/Linux, remplacer `py -m pip` par `pip3` (ou `pip`).
 
 ## Lancer le serveur
 
@@ -27,37 +24,28 @@ cd backend
 py -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Le serveur est accessible sur **http://127.0.0.1:8000**.
-
-Si votre environnement Python est déjà configuré dans le PATH, vous pouvez aussi utiliser :
-
-```powershell
-uvicorn main:app --reload --host 127.0.0.1 --port 8000
-```
-
----
 ```bash
-pip install -r requirements.txt
-```
-
-## Lancer le serveur
-
-```bash
+# macOS / Linux
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Accessible sur **<http://localhost:8000>**
+Le serveur est accessible sur **http://127.0.0.1:8000**.
+
+> Les données de jeu (`data/app.db` + `data/photos/`) sont déjà incluses dans le
+> dépôt : aucun import n'est nécessaire pour lancer le jeu. L'interface
+> `/admin` reste disponible pour régénérer un nouveau jeu de données si besoin
+> (voir ci-dessous).
 
 ## Interface d'administration
 
-Ouvrir **<http://localhost:8000/admin>**
+Ouvrir **http://127.0.0.1:8000/admin**
 
 ### Section Interpol (notices rouges)
 
 | Bouton                    | Action                                                                             |
-| ------------------------- | ---------------------------------------------------------------------------------- |
+| -------------------------- | ----------------------------------------------------------------------------------- |
 | **Import Interpol (100)** | Télécharge jusqu'à 100 avis rouges depuis l'API publique Interpol, photos incluses |
-| **Vider**                 | Supprime toutes les notices de la DB + les photos locales                          |
+| **Vider**                  | Supprime toutes les notices de la DB + les photos locales                          |
 
 > L'import efface automatiquement les données existantes avant de relancer.
 > L'import tourne **en tâche de fond** : une **barre de progression** s'affiche en
@@ -65,13 +53,17 @@ Ouvrir **<http://localhost:8000/admin>**
 
 ### Section PRO (profils fictifs)
 
-| Bouton               | Action                                                      |
-| -------------------- | ----------------------------------------------------------- |
-| **Import PRO (100)** | Génère 100 profils fictifs avec photo, prénom, nom, métier  |
-| **Vider**            | Supprime tous les profils PRO de la DB + les photos locales |
+| Bouton                | Action                                                       |
+| ---------------------- | ------------------------------------------------------------- |
+| **Import PRO (100)**  | Génère 100 profils fictifs avec photo, prénom, nom, métier   |
+| **Vider**              | Supprime tous les profils PRO de la DB + les photos locales  |
 
 > Source photos PRO : Lexica.art (visages générés par IA). Bascule automatique sur randomuser.me si indisponible.
 > Répartition : 70 % hommes, 30 % femmes (40 ans+).
+
+> ⚠️ Si tu relances un import, les **UUID des photos PRO changent** : pense à
+> recommitter `data/app.db` + `data/photos/` ensemble pour que les autres
+> contributeurs (et le correcteur) aient des données cohérentes.
 
 ## Structure des données
 
@@ -111,29 +103,27 @@ CREATE TABLE interpol_notice (
 ## Accès aux photos
 
 ```
-GET http://localhost:8000/photos/{photo_path}
+GET http://127.0.0.1:8000/photos/{photo_path}
 ```
 
-| `photo_path` en DB        | URL complète                                           |
-| ------------------------- | ------------------------------------------------------ |
-| `pro/3f2a1b4c-…-uuid.jpg` | `http://localhost:8000/photos/pro/3f2a1b4c-…-uuid.jpg` |
-| `interpol/2024-74464.jpg` | `http://localhost:8000/photos/interpol/2024-74464.jpg` |
+| `photo_path` en DB        | URL complète                                            |
+| -------------------------- | --------------------------------------------------------- |
+| `pro/3f2a1b4c-…-uuid.jpg` | `http://127.0.0.1:8000/photos/pro/3f2a1b4c-…-uuid.jpg`  |
+| `interpol/2024-74464.jpg` | `http://127.0.0.1:8000/photos/interpol/2024-74464.jpg`  |
 
-## Intégration Flutter
-
-## API REST pour le jeu — `GET /api/persons` ✅ (implémenté)
+## API REST pour le jeu — `GET /api/persons`
 
 Endpoint qui alimente le jeu Flutter « LinkedIn ou Interpol ». Renvoie un
 **mélange aléatoire** PRO + Interpol, chaque item unifié pour le front.
 
 **Paramètres :**
 
-| Param   | Défaut | Description                                              |
-| ------- | ------ | ------------------------------------------------------- |
-| `limit` | 20     | Nombre de profils (max 200)                             |
-| `type`  | _(vide)_ | `pro` (LinkedIn) ou `interpol`. Vide = mix des deux    |
+| Param   | Défaut    | Description                                          |
+| ------- | --------- | ------------------------------------------------------ |
+| `limit` | 20        | Nombre de profils (max 200)                            |
+| `type`  | _(vide)_  | `pro` (LinkedIn) ou `interpol`. Vide = mix des deux    |
 
-**Exemple : `GET http://localhost:8000/api/persons?limit=20`**
+**Exemple : `GET http://127.0.0.1:8000/api/persons?limit=20`**
 
 ```json
 {
@@ -144,14 +134,14 @@ Endpoint qui alimente le jeu Flutter « LinkedIn ou Interpol ». Renvoie un
       "type": "interpol",
       "name": "JOHN DOE",
       "post": "Criminal act of kidnapping, attempted robbery and murder",
-      "photo_url": "http://localhost:8000/photos/interpol/2024-74464.jpg"
+      "photo_url": "http://127.0.0.1:8000/photos/interpol/2024-74464.jpg"
     },
     {
       "id": 13,
       "type": "pro",
       "name": "Omar Leroy",
       "post": "Financial Analyst",
-      "photo_url": "http://localhost:8000/photos/pro/3f2a1b4c.jpg"
+      "photo_url": "http://127.0.0.1:8000/photos/pro/3f2a1b4c.jpg"
     }
   ]
 }
@@ -162,43 +152,7 @@ Endpoint qui alimente le jeu Flutter « LinkedIn ou Interpol ». Renvoie un
 - **`photo_url`** : URL absolue construite à partir de l'hôte appelant (marche en web, émulateur, ou téléphone).
 
 > **CORS** est activé (`*`) pour autoriser le front Flutter (web/émulateur/téléphone).
-> Implémentation : `backend/app/api/routes/persons.py` + `CacheService.list_persons_for_game()`.
-
-### Accès direct SQLite (alternative, si même machine)
-
-```dart
-// Avec le package sqflite ou sqlite3
-final db = await openDatabase('path/to/data/app.db');
-final rows = await db.query('persons', where: 'type = ?', whereArgs: ['pro']);
-```
-
----
-
-Endpoint à créer : `GET /api/persons?type=pro&limit=100`
-
-Réponse attendue :
-
-```json
-{
-  "forename": "Omar",
-  "surname": "Leroy",
-  "job": "Financial Analyst",
-  "charge": null,
-  "type": "pro",
-  "photo_url": "http://localhost:8000/photos/pro/3f2a1b4c.jpg"
-}
-```
-
-Fichier à créer : `app/api/routes/persons.py`
-
-```sql
-SELECT p.forename, p.surname, p.job, p.type, p.photo_path, i.charge
-FROM persons p
-LEFT JOIN interpol_notice i ON p.source_id = i.notice_id
-WHERE p.type = ?
-ORDER BY RANDOM()
-LIMIT ?
-```
+> Implémentation : `app/api/routes/persons.py` + `CacheService.list_persons_for_game()`.
 
 ## Arborescence
 
@@ -226,11 +180,4 @@ backend/
         ├── pro_service.py         # génération profils + Lexica/randomuser
         ├── import_service.py      # orchestration imports
         └── progress.py            # état de progression des imports (barre)
-    │   ├── admin_dashboard.py
-    │   └── admin_import.py
-    └── services/
-        ├── cache_service.py
-        ├── interpol_service.py
-        ├── pro_service.py
-        └── import_service.py
 ```

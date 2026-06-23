@@ -1,28 +1,24 @@
 # Frontend — LinkedIn ou Interpol
 
 > Projet global → [README racine](../README.md)
+> ⚠️ Le front a besoin du **backend lancé** pour afficher des profils — voir [backend/README.md](../backend/README.md).
 
 ## Fonctionnalités
 
-### Version actuelle
-- ✅ **Données dynamiques via l'API backend** (`GET /api/persons`) — voir [API Backend](#-api-backend)
-### MVP (Version actuelle)
-
+- ✅ Données dynamiques via l'API backend (`GET /api/persons`) — voir [API Backend](#api-backend)
 - ✅ Système de swipe gauche/droite ou boutons pour répondre
 - ✅ Score et série (streak) en temps réel
 - ✅ Barre de progression
-- ✅ **Feedback centré après chaque réponse** (bon/faux + révélation du métier/délit)
-- ✅ **Compte à rebours (3·2·1)** avant la carte suivante
-- ✅ **Sons** de réussite / échec + vibrations haptiques
+- ✅ Feedback centré après chaque réponse (bon/faux + révélation du métier/délit)
+- ✅ Compte à rebours (3·2·1) avant la carte suivante
+- ✅ Sons de réussite / échec + vibrations haptiques
 - ✅ Confettis sur bon score (>70%)
-- ✅ **Confirmation avant de quitter** une partie en cours
+- ✅ Confirmation avant de quitter une partie en cours
 - ✅ Statistiques persistantes (meilleur score, taux de réussite)
-- ✅ Paramètres personnalisables (son, vibration)
+- ✅ Paramètres personnalisables (son, vibration, mode sombre)
 
 ### Fonctionnalités futures
 
-- 🔲 Intégration API backend pour données dynamiques
-- 🔲 Système de sons
 - 🔲 Partage de score sur réseaux sociaux
 - 🔲 Mode timer/challenge
 - 🔲 Leaderboard en ligne
@@ -49,12 +45,10 @@ lib/
 ├── repositories/         # Repository Pattern
 │   ├── profile_repository.dart
 │   └── statistics_repository.dart
-├── services/            # Services concrets
-│   ├── data_service.dart            # source locale (assets/data/profiles.json)
-│   ├── api_data_service.dart        # ✅ source backend (GET /api/persons) — utilisée
-│   ├── api_profile_data_service.dart
 ├── services/             # Services concrets
-│   ├── data_service.dart
+│   ├── data_service.dart             # source locale (assets/data/profiles.json), fallback
+│   ├── api_data_service.dart         # ✅ source backend (GET /api/persons) — utilisée
+│   ├── api_profile_data_service.dart
 │   └── storage_service.dart
 ├── screens/
 │   ├── home_screen.dart
@@ -65,7 +59,8 @@ lib/
 ├── widgets/
 │   └── profile_card.dart
 └── utils/
-    └── constants.dart
+    ├── constants.dart
+    └── app_theme.dart
 ```
 
 ### Patterns utilisés
@@ -115,6 +110,7 @@ class GameProvider {
 - Flutter SDK 3.10+
 - Dart SDK 3.0+
 - Android Studio / Xcode pour les émulateurs
+- Le **backend lancé** (voir [backend/README.md](../backend/README.md)) — sans lui, l'écran de jeu affiche « Aucun profil disponible »
 
 ## Installation
 
@@ -129,10 +125,10 @@ flutter pub get
 **Via le terminal :**
 
 ```bash
-flutter run -d android
-flutter run -d ios
 flutter run -d chrome
 flutter run -d windows
+flutter run -d android
+flutter run -d ios
 ```
 
 **Via VS Code :**
@@ -148,34 +144,21 @@ dependencies:
   provider: ^6.1.0              # State management
   shared_preferences: ^2.2.0    # Stockage local
   hive: ^2.2.3                  # Base de données locale
+  hive_flutter: ^1.1.0
   flutter_card_swiper: ^7.2.0   # Swipe UI
   vibration: ^3.1.5             # Retour haptique
   confetti: ^0.8.0              # Animations
   audioplayers: ^6.1.0          # Sons réussite/échec
   share_plus: ^12.0.1           # Partage
   http: ^1.1.0                  # Requêtes HTTP (API backend)
-  provider: ^6.1.0 # State management
-  shared_preferences: ^2.2.0 # Stockage local
-  hive: ^2.2.3 # Base de données locale
-  hive_flutter: ^1.1.0
-  flutter_card_swiper: ^7.2.0 # Swipe UI
-  vibration: ^3.1.5 # Retour haptique
-  confetti: ^0.8.0 # Animations
-  share_plus: ^12.0.1 # Partage
-  http: ^1.1.0 # Requêtes HTTP
 ```
 
-Les profils de test sont dans `assets/data/profiles.json` — seront remplacés par l'API backend.
-
-- `assets/data/profiles.json` : jeu de profils local (fallback, via `DataService`).
+- `assets/data/profiles.json` : jeu de profils local (fallback si le backend est injoignable, via `DataService`).
 - `assets/sounds/` : sons du jeu (`success.wav`, `fail.wav`).
 
 **ℹ️ Source de données active :** l'app charge les profils depuis le **backend**
-(`ApiDataService` → `GET /api/persons`). Le JSON local reste un fallback.
+(`ApiDataService` → `GET /api/persons`). Le JSON local reste un simple fallback.
 
-## 🧪 Tests
-
-### Lancer les tests
 ## Tests
 
 ```bash
@@ -183,21 +166,19 @@ flutter test
 flutter test --coverage
 ```
 
-## 🌐 API Backend
-
-### ✅ Intégration active
+## API Backend
 
 L'app charge les profils depuis le backend FastAPI via `ApiDataService`
 (branché dans `main.dart`). Endpoint consommé : **`GET /api/persons`**.
 
 Réponse mappée vers le modèle `Profile` :
 
-| Backend (`/api/persons`) | Front (`Profile`) |
-| ------------------------ | ----------------- |
-| `photo_url`              | `imageUrl`        |
-| `post` (métier/délit)    | `context`         |
-| `type` = `pro`           | `ProfileType.linkedin` |
-| `type` = `interpol`      | `ProfileType.interpol` |
+| Backend (`/api/persons`) | Front (`Profile`)      |
+| ------------------------- | ------------------------ |
+| `photo_url`               | `imageUrl`               |
+| `post` (métier/délit)     | `context`                |
+| `type` = `pro`            | `ProfileType.linkedin`   |
+| `type` = `interpol`       | `ProfileType.interpol`   |
 
 ### Configurer l'URL du backend
 
@@ -211,12 +192,13 @@ final IDataService dataService = ApiDataService(
 );
 ```
 
-> Le backend doit tourner (`uvicorn main:app --port 8000`) et avoir des données
-> importées via `/admin`. Voir [`backend/README.md`](../backend/README.md).
+> Le backend doit tourner (`uvicorn main:app --port 8000`). Les données
+> (`app.db` + photos) sont déjà incluses dans le dépôt, pas d'import requis.
+> Voir [`backend/README.md`](../backend/README.md).
 > Si le backend est injoignable, `ApiDataService` renvoie une liste vide
 > (l'écran affiche « Aucun profil disponible »).
 
-## 🤝 Contribution
+## Contribution
 
 ### Workflow Git
 
@@ -262,33 +244,12 @@ git commit -m "fix(storage): correction sauvegarde stats"
 git commit -m "docs(readme): mise à jour installation"
 ```
 
-## 📝 License
-
-Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
-
-## 👥 Auteurs
+## Auteurs
 
 - **Frontend** : [Nicolas Delahaie](https://github.com/Nicolas-Delahaie)
-- **Backend** : [En cours de développement]
+- **Backend** : Anas
 
-## 📞 Contact
+## Contact
 
 Pour toute question ou suggestion :
 - 🐛 Issues : [GitHub Issues](https://github.com/Nicolas-Delahaie/ynov-cross-plateform/issues)
-
----
-
-**Version** : 1.0.0  
-**Dernière mise à jour** : 9 juin 2026
-## Intégration API backend
-
-Pour basculer vers l'API (voir [backend/README.md](../backend/README.md)) :
-
-1. Créer `ApiDataService implements IDataService`
-2. Remplacer dans `main.dart` :
-
-```dart
-final IDataService dataService = ApiDataService(baseUrl: 'http://localhost:8000');
-```
-
-Aucune autre modification nécessaire grâce à SOLID.

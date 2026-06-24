@@ -37,11 +37,23 @@ class _GameScreenState extends State<GameScreen> {
     super.dispose();
   }
 
+  /// Limite la longueur du texte affiché dans le feedback : certains délits
+  /// Interpol sont des paragraphes juridiques entiers qui font déborder la
+  /// popup. On coupe sur un mot pour rester lisible.
+  static String _truncate(String text, {int maxLength = 140}) {
+    if (text.length <= maxLength) return text;
+    final cut = text.substring(0, maxLength);
+    final lastSpace = cut.lastIndexOf(' ');
+    return '${lastSpace > 0 ? cut.substring(0, lastSpace) : cut}…';
+  }
+
   void _showResultFeedback(bool isCorrect, Profile profile) {
     final realLabel =
         profile.type == ProfileType.linkedin ? 'LinkedIn' : 'Interpol';
     // Nettoie le texte (les délits Interpol ont des retours à la ligne en vrac)
-    final post = profile.context?.replaceAll(RegExp(r'\s+'), ' ').trim();
+    final cleaned = profile.context?.replaceAll(RegExp(r'\s+'), ' ').trim();
+    final post =
+        (cleaned != null && cleaned.isNotEmpty) ? _truncate(cleaned) : null;
     final reveal =
         (post != null && post.isNotEmpty) ? '$realLabel · $post' : realLabel;
 
@@ -87,6 +99,9 @@ class _GameScreenState extends State<GameScreen> {
                 margin: const EdgeInsets.symmetric(horizontal: 40),
                 padding:
                     const EdgeInsets.symmetric(horizontal: 32, vertical: 28),
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.75,
+                ),
                 decoration: BoxDecoration(
                   color: color,
                   borderRadius: BorderRadius.circular(20),
@@ -107,14 +122,18 @@ class _GameScreenState extends State<GameScreen> {
                       size: 64,
                     ),
                     const SizedBox(height: 16),
-                    Text(
-                      _feedbackText,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        height: 1.3,
+                    Flexible(
+                      child: SingleChildScrollView(
+                        child: Text(
+                          _feedbackText,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            height: 1.3,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -243,7 +262,6 @@ class _GameScreenState extends State<GameScreen> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) => _onBackAttempt(didPop),
       child: Scaffold(
-      backgroundColor: AppConstants.backgroundColor,
       appBar: AppBar(
         title: const Text('LinkedIn ou Interpol'),
         backgroundColor: AppConstants.primaryColor,
@@ -287,8 +305,6 @@ class _GameScreenState extends State<GameScreen> {
             );
           }
 
-          final int remainingCards =
-              session.profiles.length - session.currentIndex;
           final int numberOfCardsToDisplay =
               math.min(2, session.profiles.length);
 
@@ -338,46 +354,48 @@ class _GameScreenState extends State<GameScreen> {
                   ),
                 ),
                 // Card swiper
+                // Reste toujours monté même une fois la dernière carte
+                // répondue : le retirer pendant que le swiper termine son
+                // animation interne provoque un setState() post-dispose
+                // (bug connu de flutter_card_swiper).
                 Expanded(
-                  child: remainingCards == 0
-                      ? const SizedBox.shrink()
-                      : CardSwiper(
-                          controller: _controller,
-                          cardsCount: session.profiles.length,
-                          numberOfCardsDisplayed: numberOfCardsToDisplay,
-                          backCardOffset: const Offset(0, 40),
-                          padding: const EdgeInsets.all(24.0),
-                          allowedSwipeDirection:
-                              const AllowedSwipeDirection.symmetric(horizontal: true),
-                          isLoop: false,
-                          onSwipe: (previousIndex, currentIndex, direction) {
-                            ProfileType? answer;
-                            if (direction == CardSwiperDirection.left) {
-                              answer = ProfileType.interpol;
-                            } else if (direction == CardSwiperDirection.right) {
-                              answer = ProfileType.linkedin;
-                            }
+                  child: CardSwiper(
+                    controller: _controller,
+                    cardsCount: session.profiles.length,
+                    numberOfCardsDisplayed: numberOfCardsToDisplay,
+                    backCardOffset: const Offset(0, 40),
+                    padding: const EdgeInsets.all(24.0),
+                    allowedSwipeDirection:
+                        const AllowedSwipeDirection.symmetric(horizontal: true),
+                    isLoop: false,
+                    onSwipe: (previousIndex, currentIndex, direction) {
+                      ProfileType? answer;
+                      if (direction == CardSwiperDirection.left) {
+                        answer = ProfileType.interpol;
+                      } else if (direction == CardSwiperDirection.right) {
+                        answer = ProfileType.linkedin;
+                      }
 
-                            if (answer != null) {
-                              _handleSwipe(context, answer);
-                              return true;
-                            }
+                      if (answer != null) {
+                        _handleSwipe(context, answer);
+                        return true;
+                      }
 
-                            return false;
-                          },
-                          cardBuilder:
-                              (
-                                context,
-                                index,
-                                percentThresholdX,
-                                percentThresholdY,
-                              ) {
-                                return ProfileCard(
-                                  profile: session.profiles[index],
-                                  horizontalOffsetPercentage: percentThresholdX,
-                                );
-                              },
-                        ),
+                      return false;
+                    },
+                    cardBuilder:
+                        (
+                          context,
+                          index,
+                          percentThresholdX,
+                          percentThresholdY,
+                        ) {
+                          return ProfileCard(
+                            profile: session.profiles[index],
+                            horizontalOffsetPercentage: percentThresholdX,
+                          );
+                        },
+                  ),
                 ),
                 // Buttons
                 Padding(

@@ -72,37 +72,40 @@ class ProfileCard extends StatelessWidget {
                       ],
                     ),
                     child: ClipOval(
-                      child: Image.network(
-                        profile.imageUrl,
-                        fit: BoxFit.cover,
-                        // Biais vers le haut : cadre mieux le visage
-                        alignment: const Alignment(0, -0.3),
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: colorScheme.surfaceContainerHighest,
-                            child: Icon(
-                              Icons.person,
-                              size: imageSize * 0.4,
-                              color: Colors.grey[600],
+                      child: _isNetworkUrl(profile.imageUrl)
+                          ? Image.network(
+                              profile.imageUrl,
+                              fit: BoxFit.cover,
+                              // Biais vers le haut : cadre mieux le visage
+                              alignment: const Alignment(0, -0.3),
+                              errorBuilder: (context, error, stackTrace) {
+                                return _imageFallback(colorScheme, imageSize);
+                              },
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Container(
+                                  color: colorScheme.surfaceContainerHighest,
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      value: loadingProgress.expectedTotalBytes !=
+                                              null
+                                          ? loadingProgress.cumulativeBytesLoaded /
+                                              loadingProgress.expectedTotalBytes!
+                                          : null,
+                                    ),
+                                  ),
+                                );
+                              },
+                            )
+                          // Mode hors-ligne : profils chargés depuis les assets locaux
+                          : Image.asset(
+                              profile.imageUrl,
+                              fit: BoxFit.cover,
+                              alignment: const Alignment(0, -0.3),
+                              errorBuilder: (context, error, stackTrace) {
+                                return _imageFallback(colorScheme, imageSize);
+                              },
                             ),
-                          );
-                        },
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Container(
-                            color: colorScheme.surfaceContainerHighest,
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                value: loadingProgress.expectedTotalBytes !=
-                                        null
-                                    ? loadingProgress.cumulativeBytesLoaded /
-                                        loadingProgress.expectedTotalBytes!
-                                    : null,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -158,6 +161,20 @@ class ProfileCard extends StatelessWidget {
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  bool _isNetworkUrl(String url) =>
+      url.startsWith('http://') || url.startsWith('https://');
+
+  Widget _imageFallback(ColorScheme colorScheme, double imageSize) {
+    return Container(
+      color: colorScheme.surfaceContainerHighest,
+      child: Icon(
+        Icons.person,
+        size: imageSize * 0.4,
+        color: Colors.grey[600],
       ),
     );
   }

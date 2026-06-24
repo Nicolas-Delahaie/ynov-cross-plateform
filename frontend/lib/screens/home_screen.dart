@@ -103,7 +103,11 @@ class HomeScreen extends StatelessWidget {
                         color: AppConstants.primaryColor,
                         isLoading: gameProvider.isLoading,
                         onPressed: () async {
-                          await gameProvider.startNewGame();
+                          final difficulty =
+                              context.read<SettingsProvider>().difficulty;
+                          await gameProvider.startNewGame(
+                            profilesCount: difficulty,
+                          );
                           if (context.mounted) {
                             Navigator.push(
                               context,

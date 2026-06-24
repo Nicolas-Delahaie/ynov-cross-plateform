@@ -182,8 +182,12 @@ class _ResultScreenState extends State<ResultScreen> {
                             height: 56,
                             child: ElevatedButton(
                               onPressed: () async {
-                                context.read<SettingsProvider>().vibrateTap();
-                                await gameProvider.startNewGame();
+                                final settingsProvider =
+                                    context.read<SettingsProvider>();
+                                settingsProvider.vibrateTap();
+                                await gameProvider.startNewGame(
+                                  profilesCount: settingsProvider.difficulty,
+                                );
                                 if (context.mounted) {
                                   Navigator.pop(context);
                                 }

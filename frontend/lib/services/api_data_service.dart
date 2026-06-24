@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:http/http.dart' as http;
 import '../interfaces/i_data_service.dart';
 import '../models/profile.dart';
+import 'data_service.dart';
 
 /// Charge les profils depuis le backend MACEN (FastAPI) via `GET /api/persons`.
 ///
@@ -10,6 +11,10 @@ import '../models/profile.dart';
 /// récupérés une seule fois dans [init], puis [getRandomProfiles] sert des
 /// sous-ensembles mélangés — même contrat que le [DataService] local, ce qui
 /// permet de brancher l'API sans toucher au repository ni au provider.
+///
+/// Si le backend est injoignable, bascule automatiquement sur [DataService]
+/// (profils locaux dans `assets/data/profiles.json`) afin que le jeu reste
+/// jouable sans backend lancé.
 class ApiDataService implements IDataService {
   /// URL de base du backend.
   ///
@@ -22,7 +27,9 @@ class ApiDataService implements IDataService {
   final int fetchCount;
 
   final http.Client _client;
+  final DataService _fallback = DataService();
   List<Profile> _allProfiles = [];
+  bool _usingFallback = false;
   final Random _random = Random();
 
   ApiDataService({
@@ -30,6 +37,9 @@ class ApiDataService implements IDataService {
     this.fetchCount = 100,
     http.Client? client,
   }) : _client = client ?? http.Client();
+
+  /// `true` si le backend était injoignable et qu'on sert les profils locaux.
+  bool get isUsingFallback => _usingFallback;
 
   @override
   Future<void> init() async {
@@ -46,7 +56,7 @@ class ApiDataService implements IDataService {
           await _client.get(uri).timeout(const Duration(seconds: 15));
 
       if (response.statusCode != 200) {
-        _allProfiles = [];
+        await _loadFallback();
         return;
       }
 
@@ -65,10 +75,17 @@ class ApiDataService implements IDataService {
           context: m['post'] as String?, // métier (PRO) ou délit (Interpol)
         );
       }).toList();
+      _usingFallback = false;
     } catch (_) {
-      // Backend injoignable -> liste vide (l'écran affiche "Aucun profil").
-      _allProfiles = [];
+      // Backend injoignable -> bascule sur les profils locaux.
+      await _loadFallback();
     }
+  }
+
+  Future<void> _loadFallback() async {
+    await _fallback.loadProfiles();
+    _allProfiles = _fallback.getRandomProfiles(_fallback.availableProfilesCount);
+    _usingFallback = true;
   }
 
   @override

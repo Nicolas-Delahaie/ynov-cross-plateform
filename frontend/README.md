@@ -1,11 +1,12 @@
 # Frontend — LinkedIn ou Interpol
 
 > Projet global → [README racine](../README.md)
-> ⚠️ Le front a besoin du **backend lancé** pour afficher des profils — voir [backend/README.md](../backend/README.md).
+> ℹ️ Le front fonctionne **avec ou sans backend lancé** : voir [Fallback offline](#fallback-offline-sans-backend).
 
 ## Fonctionnalités
 
 - ✅ Données dynamiques via l'API backend (`GET /api/persons`) — voir [API Backend](#api-backend)
+- ✅ Fallback offline avec de vraies photos si le backend est injoignable — voir [Fallback offline](#fallback-offline-sans-backend)
 - ✅ Système de swipe gauche/droite ou boutons pour répondre
 - ✅ Score et série (streak) en temps réel
 - ✅ Barre de progression
@@ -47,7 +48,7 @@ lib/
 │   └── statistics_repository.dart
 ├── services/             # Services concrets
 │   ├── data_service.dart             # source locale (assets/data/profiles.json), fallback
-│   ├── api_data_service.dart         # ✅ source backend (GET /api/persons) — utilisée
+│   ├── api_data_service.dart         # ✅ source backend (GET /api/persons), avec fallback auto vers DataService
 │   ├── api_profile_data_service.dart
 │   └── storage_service.dart
 ├── screens/
@@ -110,7 +111,7 @@ class GameProvider {
 - Flutter SDK 3.10+
 - Dart SDK 3.0+
 - Android Studio / Xcode pour les émulateurs
-- Le **backend lancé** (voir [backend/README.md](../backend/README.md)) — sans lui, l'écran de jeu affiche « Aucun profil disponible »
+- Le backend est **optionnel** (voir [backend/README.md](../backend/README.md)) : sans lui, le jeu utilise automatiquement les profils embarqués en local
 
 ## Installation
 
@@ -153,11 +154,14 @@ dependencies:
   http: ^1.1.0                  # Requêtes HTTP (API backend)
 ```
 
-- `assets/data/profiles.json` : jeu de profils local (fallback si le backend est injoignable, via `DataService`).
+- `assets/data/profiles.json` : 189 vrais profils (Interpol + PRO) exportés depuis `backend/data/app.db`, utilisés en fallback offline (via `DataService`).
+- `assets/images/interpol/`, `assets/images/pro/` : les 189 photos correspondantes, embarquées dans l'app pour que le fallback affiche de vraies images (pas de placeholder).
 - `assets/sounds/` : sons du jeu (`success.wav`, `fail.wav`).
 
-**ℹ️ Source de données active :** l'app charge les profils depuis le **backend**
-(`ApiDataService` → `GET /api/persons`). Le JSON local reste un simple fallback.
+**ℹ️ Source de données active :** l'app essaie d'abord le **backend**
+(`ApiDataService` → `GET /api/persons`). Si injoignable (timeout, erreur), elle
+bascule automatiquement sur les profils locaux ci-dessus — voir
+[Fallback offline](#fallback-offline-sans-backend).
 
 ## Tests
 
@@ -192,11 +196,31 @@ final IDataService dataService = ApiDataService(
 );
 ```
 
-> Le backend doit tourner (`uvicorn main:app --port 8000`). Les données
-> (`app.db` + photos) sont déjà incluses dans le dépôt, pas d'import requis.
-> Voir [`backend/README.md`](../backend/README.md).
-> Si le backend est injoignable, `ApiDataService` renvoie une liste vide
-> (l'écran affiche « Aucun profil disponible »).
+> Voir [`backend/README.md`](../backend/README.md) pour lancer le backend.
+> Si le backend est injoignable, `ApiDataService` bascule automatiquement
+> sur le fallback offline (voir ci-dessous) — l'écran de jeu reste fonctionnel.
+
+## Fallback offline (sans backend)
+
+Le front peut tourner **sans backend lancé**. `ApiDataService.loadProfiles()`
+essaie l'API (`timeout` 15s) ; en cas d'échec (backend non démarré, erreur
+réseau, réponse invalide), il bascule sur `DataService`, qui charge
+`assets/data/profiles.json` (189 profils Interpol/PRO réels, exportés depuis
+`backend/data/app.db`) et leurs photos dans `assets/images/`.
+
+`ProfileCard` détecte automatiquement la source de l'image (`Image.network`
+pour une URL backend, `Image.asset` pour un chemin local) — aucune
+configuration nécessaire.
+
+> Cette fonctionnalité va au-delà des contraintes minimales du projet : elle
+> permet de démontrer le jeu sans dépendance au backend (ex. pour une
+> correction rapide), tout en gardant l'intégration API complète et
+> fonctionnelle quand le backend tourne.
+
+> Si `backend/data/app.db` est régénéré (nouvel import via `/admin`), ce jeu
+> de données local devient désynchronisé — il faudra réexporter
+> `assets/data/profiles.json` et recopier les nouvelles photos dans
+> `assets/images/` pour le remettre à jour.
 
 ## Contribution
 

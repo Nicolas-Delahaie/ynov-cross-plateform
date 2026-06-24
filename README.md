@@ -8,10 +8,13 @@ Application mobile de jeu "swipe" où l'utilisateur devine si une photo de profi
 - **Frontend Flutter** → [frontend/README.md](frontend/README.md)
 - **Backend Python** → [backend/README.md](backend/README.md)
 
-> ⚠️ Le jeu a besoin des **deux côtés lancés en même temps** : le backend sert
-> les profils et les photos (`/api/persons`, `/photos/...`), le frontend les
-> affiche. Les données de jeu (`backend/data/app.db` + `backend/data/photos/`)
-> sont déjà incluses dans le dépôt — aucun import à faire pour tester.
+> ℹ️ **Le frontend fonctionne seul, sans backend** : si l'API est injoignable,
+> il bascule automatiquement sur un jeu de données local embarqué (189 vraies
+> photos Interpol/PRO). Pour lancer juste le jeu, l'étape 2 ci-dessous est
+> donc optionnelle. Lancer aussi le backend permet d'avoir les données les
+> plus à jour et de tester l'API réelle (`/api/persons`, `/photos/...`).
+> Les données (`backend/data/app.db` + `backend/data/photos/`) sont déjà
+> incluses dans le dépôt — aucun import à faire pour tester.
 
 ## Installation
 
@@ -22,7 +25,7 @@ git clone https://github.com/Nicolas-Delahaie/ynov-cross-plateform.git
 cd ynov-cross-plateform
 ```
 
-### 2. Lancer le backend (terminal 1)
+### 2. Lancer le backend (terminal 1, optionnel)
 
 ```bash
 cd backend

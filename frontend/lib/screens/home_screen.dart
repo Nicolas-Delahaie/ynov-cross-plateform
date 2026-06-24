@@ -13,6 +13,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -122,7 +123,8 @@ class HomeScreen extends StatelessWidget {
                       _MenuButton(
                         label: 'Statistiques',
                         icon: Icons.bar_chart,
-                        color: AppConstants.textColor,
+                        color: colorScheme.secondary,
+                        foregroundColor: colorScheme.onSecondary,
                         onPressed: () {
                           Navigator.push(
                             context,
@@ -136,7 +138,8 @@ class HomeScreen extends StatelessWidget {
                       _MenuButton(
                         label: 'Paramètres',
                         icon: Icons.settings,
-                        color: AppConstants.textColor,
+                        color: colorScheme.secondary,
+                        foregroundColor: colorScheme.onSecondary,
                         onPressed: () {
                           Navigator.push(
                             context,
@@ -163,6 +166,7 @@ class _MenuButton extends StatelessWidget {
   final String label;
   final IconData icon;
   final Color color;
+  final Color foregroundColor;
   final VoidCallback onPressed;
   final bool isLoading;
 
@@ -170,6 +174,7 @@ class _MenuButton extends StatelessWidget {
     required this.label,
     required this.icon,
     required this.color,
+    this.foregroundColor = Colors.white,
     required this.onPressed,
     this.isLoading = false,
   });
@@ -188,19 +193,19 @@ class _MenuButton extends StatelessWidget {
               },
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
-          foregroundColor: Colors.white,
+          foregroundColor: foregroundColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
           elevation: 2,
         ),
         child: isLoading
-            ? const SizedBox(
+            ? SizedBox(
                 width: 24,
                 height: 24,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  valueColor: AlwaysStoppedAnimation<Color>(foregroundColor),
                 ),
               )
             : Row(

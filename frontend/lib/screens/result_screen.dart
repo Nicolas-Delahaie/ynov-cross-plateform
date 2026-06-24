@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:confetti/confetti.dart';
+import 'package:share_plus/share_plus.dart';
+import '../models/game_session.dart';
 import '../providers/game_provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/statistics_provider.dart';
@@ -41,6 +43,17 @@ class _ResultScreenState extends State<ResultScreen> {
     super.dispose();
   }
 
+  Future<void> _shareScore(GameSession session) async {
+    final accuracy = (session.accuracy * 100).toStringAsFixed(0);
+    await SharePlus.instance.share(
+      ShareParams(
+        text: 'J\'ai fait ${session.correctAnswers}/${session.profiles.length} '
+            '($accuracy% de réussite) sur LinkedIn ou Interpol ! 🕵️‍♂️💼 '
+            'Sauras-tu faire mieux ?',
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,7 +88,7 @@ class _ResultScreenState extends State<ResultScreen> {
                               style: TextStyle(
                                 fontSize: 32,
                                 fontWeight: FontWeight.bold,
-                                color: AppConstants.textColor,
+                                color: colorScheme.onSurface,
                               ),
                             ),
                             const SizedBox(height: 24),
@@ -83,7 +96,7 @@ class _ResultScreenState extends State<ResultScreen> {
                             Container(
                               padding: const EdgeInsets.all(24),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: colorScheme.surface,
                                 borderRadius: BorderRadius.circular(20),
                                 boxShadow: [
                                   BoxShadow(
@@ -108,7 +121,7 @@ class _ResultScreenState extends State<ResultScreen> {
                                     style: TextStyle(
                                       fontSize: 48,
                                       fontWeight: FontWeight.bold,
-                                      color: AppConstants.primaryColor,
+                                      color: colorScheme.primary,
                                     ),
                                   ),
                                   const SizedBox(height: 8),
@@ -116,7 +129,7 @@ class _ResultScreenState extends State<ResultScreen> {
                                     '$accuracy% de réussite',
                                     style: TextStyle(
                                       fontSize: 20,
-                                      color: Colors.grey[600],
+                                      color: colorScheme.onSurface.withValues(alpha: 0.6),
                                     ),
                                   ),
                                   if (isNewBestScore) ...[
@@ -193,8 +206,8 @@ class _ResultScreenState extends State<ResultScreen> {
                                 }
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: AppConstants.primaryColor,
-                                foregroundColor: Colors.white,
+                                backgroundColor: colorScheme.primary,
+                                foregroundColor: colorScheme.onPrimary,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -232,9 +245,9 @@ class _ResultScreenState extends State<ResultScreen> {
                                 );
                               },
                               style: OutlinedButton.styleFrom(
-                                foregroundColor: AppConstants.textColor,
+                                foregroundColor: colorScheme.onSurface,
                                 side: BorderSide(
-                                  color: AppConstants.textColor,
+                                  color: colorScheme.onSurface,
                                   width: 2,
                                 ),
                                 shape: RoundedRectangleBorder(
@@ -248,6 +261,18 @@ class _ResultScreenState extends State<ResultScreen> {
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextButton.icon(
+                            onPressed: () {
+                              context.read<SettingsProvider>().vibrateTap();
+                              _shareScore(session);
+                            },
+                            icon: const Icon(Icons.share),
+                            label: const Text('Partager mon score'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: colorScheme.onSurface.withValues(alpha: 0.7),
                             ),
                           ),
                         ],

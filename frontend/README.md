@@ -16,11 +16,12 @@
 - ✅ Confettis sur bon score (>70%)
 - ✅ Confirmation avant de quitter une partie en cours
 - ✅ Statistiques persistantes (meilleur score, taux de réussite)
+- ✅ Réinitialisation des statistiques (avec confirmation)
+- ✅ Partage du score (`share_plus`)
 - ✅ Paramètres personnalisables (son, vibration, mode sombre)
 
 ### Fonctionnalités futures
 
-- 🔲 Partage de score sur réseaux sociaux
 - 🔲 Mode timer/challenge
 - 🔲 Leaderboard en ligne
 
@@ -58,7 +59,11 @@ lib/
 │   ├── statistics_screen.dart
 │   └── settings_screen.dart
 ├── widgets/
-│   └── profile_card.dart
+│   ├── profile_card.dart
+│   ├── game_header.dart          # score, série, barre de progression
+│   ├── game_card_swiper.dart     # pile de cartes swipables
+│   ├── game_feedback_overlay.dart # popup correct/raté apres chaque swipe
+│   └── answer_buttons_row.dart   # boutons Interpol/LinkedIn
 └── utils/
     ├── constants.dart
     └── app_theme.dart
@@ -143,14 +148,12 @@ Ouvrir le dossier `frontend/` directement (`code frontend/`), puis sélectionner
 ```yaml
 dependencies:
   provider: ^6.1.0              # State management
-  shared_preferences: ^2.2.0    # Stockage local
-  hive: ^2.2.3                  # Base de données locale
-  hive_flutter: ^1.1.0
+  shared_preferences: ^2.2.0    # Stockage local (statistiques, paramètres)
   flutter_card_swiper: ^7.2.0   # Swipe UI
   vibration: ^3.1.5             # Retour haptique
   confetti: ^0.8.0              # Animations
   audioplayers: ^6.1.0          # Sons réussite/échec
-  share_plus: ^12.0.1           # Partage
+  share_plus: ^12.0.1           # Partage du score
   http: ^1.1.0                  # Requêtes HTTP (API backend)
 ```
 

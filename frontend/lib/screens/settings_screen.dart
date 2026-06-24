@@ -1,10 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
+import '../providers/statistics_provider.dart';
 import '../utils/constants.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
+
+  /// Demande confirmation avant d'effacer les statistiques (action
+  /// irréversible : parties jouées, meilleur score, meilleure série,
+  /// taux de réussite, répartition des erreurs).
+  Future<void> _confirmResetStats(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Réinitialiser les statistiques ?'),
+        content: const Text(
+          'Le meilleur score, la meilleure série, le nombre de parties et '
+          'le taux de réussite seront définitivement effacés.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: AppConstants.errorColor,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Réinitialiser'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    await context.read<StatisticsProvider>().reset();
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Statistiques réinitialisées')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -93,6 +132,23 @@ class SettingsScreen extends StatelessWidget {
                 onChanged: (value) {
                   if (value != null) settingsProvider.setDifficulty(value);
                 },
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => _confirmResetStats(context),
+                  icon: const Icon(Icons.restart_alt),
+                  label: const Text('Réinitialiser les statistiques'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppConstants.errorColor,
+                    side: BorderSide(color: AppConstants.errorColor),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(height: 32),
               _SettingCard(

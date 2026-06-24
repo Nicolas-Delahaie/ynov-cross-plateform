@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:confetti/confetti.dart';
+import 'package:share_plus/share_plus.dart';
+import '../models/game_session.dart';
 import '../providers/game_provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/statistics_provider.dart';
@@ -39,6 +41,17 @@ class _ResultScreenState extends State<ResultScreen> {
   void dispose() {
     _confettiController.dispose();
     super.dispose();
+  }
+
+  Future<void> _shareScore(GameSession session) async {
+    final accuracy = (session.accuracy * 100).toStringAsFixed(0);
+    await SharePlus.instance.share(
+      ShareParams(
+        text: 'J\'ai fait ${session.correctAnswers}/${session.profiles.length} '
+            '($accuracy% de réussite) sur LinkedIn ou Interpol ! 🕵️‍♂️💼 '
+            'Sauras-tu faire mieux ?',
+      ),
+    );
   }
 
   @override
@@ -248,6 +261,18 @@ class _ResultScreenState extends State<ResultScreen> {
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextButton.icon(
+                            onPressed: () {
+                              context.read<SettingsProvider>().vibrateTap();
+                              _shareScore(session);
+                            },
+                            icon: const Icon(Icons.share),
+                            label: const Text('Partager mon score'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: colorScheme.onSurface.withValues(alpha: 0.7),
                             ),
                           ),
                         ],

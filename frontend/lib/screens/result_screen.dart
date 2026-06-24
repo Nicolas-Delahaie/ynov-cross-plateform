@@ -75,7 +75,7 @@ class _ResultScreenState extends State<ResultScreen> {
                               style: TextStyle(
                                 fontSize: 32,
                                 fontWeight: FontWeight.bold,
-                                color: AppConstants.textColor,
+                                color: colorScheme.onSurface,
                               ),
                             ),
                             const SizedBox(height: 24),
@@ -83,7 +83,7 @@ class _ResultScreenState extends State<ResultScreen> {
                             Container(
                               padding: const EdgeInsets.all(24),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: colorScheme.surface,
                                 borderRadius: BorderRadius.circular(20),
                                 boxShadow: [
                                   BoxShadow(
@@ -108,7 +108,7 @@ class _ResultScreenState extends State<ResultScreen> {
                                     style: TextStyle(
                                       fontSize: 48,
                                       fontWeight: FontWeight.bold,
-                                      color: AppConstants.primaryColor,
+                                      color: colorScheme.primary,
                                     ),
                                   ),
                                   const SizedBox(height: 8),
@@ -116,7 +116,7 @@ class _ResultScreenState extends State<ResultScreen> {
                                     '$accuracy% de réussite',
                                     style: TextStyle(
                                       fontSize: 20,
-                                      color: Colors.grey[600],
+                                      color: colorScheme.onSurface.withValues(alpha: 0.6),
                                     ),
                                   ),
                                   if (isNewBestScore) ...[
@@ -193,8 +193,8 @@ class _ResultScreenState extends State<ResultScreen> {
                                 }
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: AppConstants.primaryColor,
-                                foregroundColor: Colors.white,
+                                backgroundColor: colorScheme.primary,
+                                foregroundColor: colorScheme.onPrimary,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -232,9 +232,9 @@ class _ResultScreenState extends State<ResultScreen> {
                                 );
                               },
                               style: OutlinedButton.styleFrom(
-                                foregroundColor: AppConstants.textColor,
+                                foregroundColor: colorScheme.onSurface,
                                 side: BorderSide(
-                                  color: AppConstants.textColor,
+                                  color: colorScheme.onSurface,
                                   width: 2,
                                 ),
                                 shape: RoundedRectangleBorder(

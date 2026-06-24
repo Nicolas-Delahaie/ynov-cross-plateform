@@ -51,7 +51,7 @@ class StorageService implements IStorageService {
 
   @override
   bool getSoundEnabled() {
-    return _prefs?.getBool(AppConstants.settingsSoundKey) ?? false;
+    return _prefs?.getBool(AppConstants.settingsSoundKey) ?? true;
   }
 
   @override

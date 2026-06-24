@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:vibration/vibration.dart';
 import '../interfaces/i_storage_service.dart';
@@ -6,8 +7,9 @@ import '../utils/constants.dart';
 /// Provider pour les paramètres (Single Responsibility + Dependency Injection)
 class SettingsProvider with ChangeNotifier {
   final IStorageService _storageService;
+  final AudioPlayer _player = AudioPlayer();
 
-  bool _soundEnabled = false;
+  bool _soundEnabled = true;
   bool _vibrationEnabled = true;
   int _difficulty = AppConstants.defaultProfilesPerGame;
   bool _isDarkMode = false;
@@ -84,5 +86,28 @@ class SettingsProvider with ChangeNotifier {
     await vibrateIfEnabled(duration: 100);
     await Future.delayed(const Duration(milliseconds: 120));
     await vibrateIfEnabled(duration: 200);
+  }
+
+  Future<void> _playSound(String asset) async {
+    if (!_soundEnabled) return;
+    try {
+      // ReleaseMode.stop : on peut rejouer rapidement le même son
+      await _player.setReleaseMode(ReleaseMode.stop);
+      await _player.play(AssetSource(asset));
+    } catch (e) {
+      debugPrint('Sound error ($asset): $e');
+    }
+  }
+
+  /// Son agréable de réussite.
+  Future<void> playSuccess() => _playSound('sounds/success.wav');
+
+  /// Son d'échec (trombone triste).
+  Future<void> playError() => _playSound('sounds/fail.wav');
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
   }
 }

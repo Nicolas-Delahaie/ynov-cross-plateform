@@ -4,7 +4,7 @@ import 'interfaces/i_data_service.dart';
 import 'interfaces/i_storage_service.dart';
 import 'interfaces/i_profile_repository.dart';
 import 'interfaces/i_statistics_repository.dart';
-import 'services/data_service.dart';
+import 'services/api_data_service.dart';
 import 'services/storage_service.dart';
 import 'repositories/profile_repository.dart';
 import 'repositories/statistics_repository.dart';
@@ -19,7 +19,11 @@ void main() async {
   
   // Dependency Injection - création des instances (SOLID: Dependency Inversion)
   final IStorageService storageService = StorageService();
-  final IDataService dataService = DataService();
+  // Branché sur le backend MACEN. Changer baseUrl selon la cible :
+  // web/Chrome -> localhost:8000 | émulateur Android -> 10.0.2.2:8000
+  final IDataService dataService = ApiDataService(
+    baseUrl: 'http://localhost:8000',
+  );
   
   // Repositories (Repository Pattern)
   final IProfileRepository profileRepository = ProfileRepository(dataService);

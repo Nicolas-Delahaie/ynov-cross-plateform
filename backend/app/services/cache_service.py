@@ -156,6 +156,30 @@ class CacheService:
 
         return [dict(r) for r in rows]
 
+    def list_persons_for_game(
+        self, person_type: Optional[str] = None, limit: int = 20
+    ) -> List[Dict[str, Any]]:
+        """Liste mélangée pour le jeu : profils + délit (charge) joint pour Interpol.
+
+        person_type=None -> mix PRO + Interpol. Sinon filtre sur "pro" / "interpol".
+        """
+        query = """
+            SELECT p.id, p.forename, p.surname, p.job, p.type,
+                   p.photo_path, p.source_id, i.charge
+            FROM persons p
+            LEFT JOIN interpol_notice i ON p.source_id = i.notice_id
+        """
+        params: list = []
+        if person_type in ("pro", "interpol"):
+            query += " WHERE p.type = ?"
+            params.append(person_type)
+        query += " ORDER BY RANDOM() LIMIT ?"
+        params.append(limit)
+
+        with self._connect() as conn:
+            rows = conn.execute(query, params).fetchall()
+        return [dict(r) for r in rows]
+
     def persons_stats(self) -> Dict[str, Any]:
         with self._connect() as conn:
             interpol_count = conn.execute(

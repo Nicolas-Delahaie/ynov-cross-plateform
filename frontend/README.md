@@ -1,24 +1,25 @@
 # Frontend — LinkedIn ou Interpol
 
 > Projet global → [README racine](../README.md)
+> ℹ️ Le front fonctionne **avec ou sans backend lancé** : voir [Fallback offline](#fallback-offline-sans-backend).
 
 ## Fonctionnalités
 
-### MVP (Version actuelle)
-
+- ✅ Données dynamiques via l'API backend (`GET /api/persons`) — voir [API Backend](#api-backend)
+- ✅ Fallback offline avec de vraies photos si le backend est injoignable — voir [Fallback offline](#fallback-offline-sans-backend)
 - ✅ Système de swipe gauche/droite ou boutons pour répondre
 - ✅ Score et série (streak) en temps réel
 - ✅ Barre de progression
-- ✅ Vibrations haptiques sur succès/erreur
+- ✅ Feedback centré après chaque réponse (bon/faux + révélation du métier/délit)
+- ✅ Compte à rebours (3·2·1) avant la carte suivante
+- ✅ Sons de réussite / échec + vibrations haptiques
 - ✅ Confettis sur bon score (>70%)
+- ✅ Confirmation avant de quitter une partie en cours
 - ✅ Statistiques persistantes (meilleur score, taux de réussite)
-- ✅ 3 niveaux de difficulté (10/20/30 photos)
-- ✅ Paramètres personnalisables (son, vibration)
+- ✅ Paramètres personnalisables (son, vibration, mode sombre)
 
 ### Fonctionnalités futures
 
-- 🔲 Intégration API backend pour données dynamiques
-- 🔲 Système de sons
 - 🔲 Partage de score sur réseaux sociaux
 - 🔲 Mode timer/challenge
 - 🔲 Leaderboard en ligne
@@ -46,7 +47,9 @@ lib/
 │   ├── profile_repository.dart
 │   └── statistics_repository.dart
 ├── services/             # Services concrets
-│   ├── data_service.dart
+│   ├── data_service.dart             # source locale (assets/data/profiles.json), fallback
+│   ├── api_data_service.dart         # ✅ source backend (GET /api/persons), avec fallback auto vers DataService
+│   ├── api_profile_data_service.dart
 │   └── storage_service.dart
 ├── screens/
 │   ├── home_screen.dart
@@ -57,7 +60,8 @@ lib/
 ├── widgets/
 │   └── profile_card.dart
 └── utils/
-    └── constants.dart
+    ├── constants.dart
+    └── app_theme.dart
 ```
 
 ### Patterns utilisés
@@ -107,6 +111,7 @@ class GameProvider {
 - Flutter SDK 3.10+
 - Dart SDK 3.0+
 - Android Studio / Xcode pour les émulateurs
+- Le backend est **optionnel** (voir [backend/README.md](../backend/README.md)) : sans lui, le jeu utilise automatiquement les profils embarqués en local
 
 ## Installation
 
@@ -121,10 +126,10 @@ flutter pub get
 **Via le terminal :**
 
 ```bash
-flutter run -d android
-flutter run -d ios
 flutter run -d chrome
 flutter run -d windows
+flutter run -d android
+flutter run -d ios
 ```
 
 **Via VS Code :**
@@ -137,18 +142,26 @@ Ouvrir le dossier `frontend/` directement (`code frontend/`), puis sélectionner
 
 ```yaml
 dependencies:
-  provider: ^6.1.0 # State management
-  shared_preferences: ^2.2.0 # Stockage local
-  hive: ^2.2.3 # Base de données locale
+  provider: ^6.1.0              # State management
+  shared_preferences: ^2.2.0    # Stockage local
+  hive: ^2.2.3                  # Base de données locale
   hive_flutter: ^1.1.0
-  flutter_card_swiper: ^7.2.0 # Swipe UI
-  vibration: ^3.1.5 # Retour haptique
-  confetti: ^0.8.0 # Animations
-  share_plus: ^12.0.1 # Partage
-  http: ^1.1.0 # Requêtes HTTP
+  flutter_card_swiper: ^7.2.0   # Swipe UI
+  vibration: ^3.1.5             # Retour haptique
+  confetti: ^0.8.0              # Animations
+  audioplayers: ^6.1.0          # Sons réussite/échec
+  share_plus: ^12.0.1           # Partage
+  http: ^1.1.0                  # Requêtes HTTP (API backend)
 ```
 
-Les profils de test sont dans `assets/data/profiles.json` — seront remplacés par l'API backend.
+- `assets/data/profiles.json` : 189 vrais profils (Interpol + PRO) exportés depuis `backend/data/app.db`, utilisés en fallback offline (via `DataService`).
+- `assets/images/interpol/`, `assets/images/pro/` : les 189 photos correspondantes, embarquées dans l'app pour que le fallback affiche de vraies images (pas de placeholder).
+- `assets/sounds/` : sons du jeu (`success.wav`, `fail.wav`).
+
+**ℹ️ Source de données active :** l'app essaie d'abord le **backend**
+(`ApiDataService` → `GET /api/persons`). Si injoignable (timeout, erreur), elle
+bascule automatiquement sur les profils locaux ci-dessus — voir
+[Fallback offline](#fallback-offline-sans-backend).
 
 ## Tests
 
@@ -157,15 +170,110 @@ flutter test
 flutter test --coverage
 ```
 
-## Intégration API backend
+## API Backend
 
-Pour basculer vers l'API (voir [backend/README.md](../backend/README.md)) :
+L'app charge les profils depuis le backend FastAPI via `ApiDataService`
+(branché dans `main.dart`). Endpoint consommé : **`GET /api/persons`**.
 
-1. Créer `ApiDataService implements IDataService`
-2. Remplacer dans `main.dart` :
+Réponse mappée vers le modèle `Profile` :
+
+| Backend (`/api/persons`) | Front (`Profile`)      |
+| ------------------------- | ------------------------ |
+| `photo_url`               | `imageUrl`               |
+| `post` (métier/délit)     | `context`                |
+| `type` = `pro`            | `ProfileType.linkedin`   |
+| `type` = `interpol`       | `ProfileType.interpol`   |
+
+### Configurer l'URL du backend
+
+Dans `main.dart`, selon l'endroit où tourne le front :
 
 ```dart
-final IDataService dataService = ApiDataService(baseUrl: 'http://localhost:8000');
+final IDataService dataService = ApiDataService(
+  baseUrl: 'http://localhost:8000',   // web / Chrome (même PC)
+  // baseUrl: 'http://10.0.2.2:8000', // émulateur Android
+  // baseUrl: 'http://<IP-du-PC>:8000', // téléphone réel (même WiFi)
+);
 ```
 
-Aucune autre modification nécessaire grâce à SOLID.
+> Voir [`backend/README.md`](../backend/README.md) pour lancer le backend.
+> Si le backend est injoignable, `ApiDataService` bascule automatiquement
+> sur le fallback offline (voir ci-dessous) — l'écran de jeu reste fonctionnel.
+
+## Fallback offline (sans backend)
+
+Le front peut tourner **sans backend lancé**. `ApiDataService.loadProfiles()`
+essaie l'API (`timeout` 15s) ; en cas d'échec (backend non démarré, erreur
+réseau, réponse invalide), il bascule sur `DataService`, qui charge
+`assets/data/profiles.json` (189 profils Interpol/PRO réels, exportés depuis
+`backend/data/app.db`) et leurs photos dans `assets/images/`.
+
+`ProfileCard` détecte automatiquement la source de l'image (`Image.network`
+pour une URL backend, `Image.asset` pour un chemin local) — aucune
+configuration nécessaire.
+
+> Cette fonctionnalité va au-delà des contraintes minimales du projet : elle
+> permet de démontrer le jeu sans dépendance au backend (ex. pour une
+> correction rapide), tout en gardant l'intégration API complète et
+> fonctionnelle quand le backend tourne.
+
+> Si `backend/data/app.db` est régénéré (nouvel import via `/admin`), ce jeu
+> de données local devient désynchronisé — il faudra réexporter
+> `assets/data/profiles.json` et recopier les nouvelles photos dans
+> `assets/images/` pour le remettre à jour.
+
+## Contribution
+
+### Workflow Git
+
+1. Créer une branche feature
+```bash
+git checkout -b feature/nom-feature
+```
+
+2. Commit avec messages clairs
+```bash
+git commit -m "feat: ajout de [fonctionnalité]"
+```
+
+3. Push et créer une Pull Request
+```bash
+git push origin feature/nom-feature
+```
+
+### Conventions de code
+
+- Suivre les [Dart style guidelines](https://dart.dev/guides/language/effective-dart/style)
+- Commenter les interfaces et méthodes publiques
+- Écrire des tests pour les nouvelles fonctionnalités
+- Respecter les principes SOLID
+
+### Messages de commit
+
+Format : `type(scope): message`
+
+Types :
+- `feat` : Nouvelle fonctionnalité
+- `fix` : Correction de bug
+- `docs` : Documentation
+- `style` : Formatage
+- `refactor` : Refactoring
+- `test` : Tests
+- `chore` : Maintenance
+
+Exemples :
+```bash
+git commit -m "feat(game): ajout du mode timer"
+git commit -m "fix(storage): correction sauvegarde stats"
+git commit -m "docs(readme): mise à jour installation"
+```
+
+## Auteurs
+
+- **Frontend** : [Nicolas Delahaie](https://github.com/Nicolas-Delahaie)
+- **Backend** : Anas
+
+## Contact
+
+Pour toute question ou suggestion :
+- 🐛 Issues : [GitHub Issues](https://github.com/Nicolas-Delahaie/ynov-cross-plateform/issues)

@@ -19,9 +19,9 @@ def admin_dashboard(request: Request):
     pro_cards = cache.list_persons("pro", limit=120)
 
     return templates.TemplateResponse(
+        request,
         "dashboard.html",
         {
-            "request": request,
             "stats": stats,
             "cards": cards,
             "persons_stats": persons_stats,
